@@ -1,14 +1,14 @@
-import SharedState from '../modules/shared-state'
+import SharedState from '../modules/shared-state';
 
 const raven = {
   dsn: 'https://b5bbb7c4a5554e70b91b1055093f6bda@sentry.io/1268836',
 };
 
 let host = '192.168.2.24:8090';
-let scheme  = 'http://';
+let scheme = 'http://';
 if (SharedState.state.productionMode) {
   host = 'api.press-review.weaving-the-web.org';
-  scheme = 'https://'
+  scheme = 'https://';
 }
 
 const api = {
