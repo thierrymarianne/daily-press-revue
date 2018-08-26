@@ -1,7 +1,5 @@
 import VueRouter from 'vue-router';
 import Vue from 'vue';
-import axios from 'axios';
-import VueAxios from 'vue-axios';
 
 import Notifications from 'vue-notification';
 import VueClipboards from 'vue-clipboards';
@@ -11,6 +9,8 @@ import RavenVue from 'raven-js/plugins/vue';
 import App from './components/app.vue';
 import routes from './modules/routes';
 import SharedState from './modules/shared-state';
+import Api from './modules/axios';
+
 // Uncomment when a Vuex is required
 // @see https://vuex.vuejs.org/
 // import store from './store';
@@ -25,9 +25,8 @@ Vue.config.productionTip = false;
 Vue.use(VueRouter);
 Vue.use(Notifications);
 Vue.use(VueClipboards);
-Vue.use(VueAxios, axios);
 
-axios.defaults.headers.common['x-auth-token'] = Config.apiKey;
+Api.useAxios();
 
 if (SharedState.state.productionMode) {
   const dsn = Config.raven.dsn;
