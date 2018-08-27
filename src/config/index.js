@@ -4,11 +4,17 @@ const raven = {
   dsn: 'https://b5bbb7c4a5554e70b91b1055093f6bda@sentry.io/1268836',
 };
 
-let host = '192.168.2.24:8090';
+let host = 'localhost:8090';
+
 let scheme = 'http://';
 if (SharedState.state.productionMode) {
   host = 'api.press-review.weaving-the-web.org';
   scheme = 'https://';
+}
+
+if (SharedState.state.mobileMode) {
+  host = '192.168.2.24:8090';
+  scheme = 'http://';
 }
 
 const api = {
