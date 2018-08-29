@@ -11,12 +11,6 @@ import routes from './modules/routes';
 import SharedState from './modules/shared-state';
 import Api from './modules/axios';
 
-// Uncomment when a Vuex is required
-// @see https://vuex.vuejs.org/
-// import store from './store';
-// Uncomment when an event bus is required
-// @see https://vuejs.org/v2/style-guide/#Non-flux-state-management-use-with-caution
-// import EventHub from './modules/event-hub';
 import Styles from './styles';
 import Config from './config';
 
@@ -26,9 +20,9 @@ Vue.use(VueRouter);
 Vue.use(Notifications);
 Vue.use(VueClipboards);
 
-Api.useAxios();
+Api.useAxios(Vue);
 
-if (SharedState.state.productionMode) {
+if (SharedState.isProductionModeActive()) {
   const dsn = Config.raven.dsn;
   Raven.config(dsn)
   .addPlugin(RavenVue, Vue)
@@ -57,7 +51,6 @@ router.beforeEach((to, from, next) => {
 const app = new Vue({
   el: '#app',
   router,
-  // store,
   style: Styles.styles,
   components: {
     App,
