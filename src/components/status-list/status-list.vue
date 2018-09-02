@@ -12,21 +12,22 @@
         :data-key='aggregateType.name'
         v-for='aggregateType in aggregateTypes'
       >
-        <div v-if='visibleAggregateHasStatuses'>
+        <template v-if='visibleAggregateHasStatuses'>
           <div
-            :data-key='status.key'
-            :key='status.key'
+            :data-index='status.key'
+            :data-status-id='status.statusId'
+            :key='status.statusId'
             class='status-list__item'
             v-show='isAggregateVisible(aggregateType.name)'
             v-for='status in visibleStatuses.statuses'
           >
-              <status :status='status' />
+            <status :status='status' />
           </div>
-        </div>
+        </template>
         <div
-          v-else-if='isAggregateVisible("bucket")'
+          v-else
           class='status-list__item-none'
-        >No item has been added to this bucket before.</div>
+        >{{ emptyAggregateText(aggregateType) }}</div>
       </div>
     </transition-group>
   </div>
@@ -71,6 +72,13 @@ export default {
       'isInBucket',
       'isStatusInBucket',
     ]),
+    emptyAggregateText: function (aggregateType) {
+      if (this.isAggregateVisible('bucket')) {
+        return 'Your private bucket is empty.';
+      }
+
+        return 'Hum... Nothing has been collected yet for this list. Something MUST shall wrong - See RFC 2119).';
+    },
     refreshBucket: function () {
       const statusesInBucket = this.getStatusesInBucket();
       const statusCollection = this.getCollectionOfStatusesInBucket(statusesInBucket);
@@ -79,6 +87,10 @@ export default {
         isVisible: false,
         name: 'bucket',
       };
+
+      if (this.visibleStatuses.name === 'bucket') {
+        this.visibleStatuses.statuses = statusCollection;
+      }
     },
     getCollectionOfStatusesInBucket: function (statuses) {
       if (statuses === undefined) {
@@ -96,6 +108,16 @@ export default {
         classNames['status-list__list--full-width'] = true;
       }
       
+      if ((this.visibleStatuses.name === 'bucket')
+      && (Object.keys(this.visibleStatuses.statuses).length === 0)) {
+        classNames['status-list__empty-bucket'] = true;
+      }
+
+      if ((this.visibleStatuses.name !== 'bucket')
+      && (Object.keys(this.visibleStatuses.statuses).length === 0)) {
+        classNames['status-list__empty-list'] = true;
+      }
+
       return classNames;
     },
     formatStatuses: function (statuses) {
@@ -254,6 +276,7 @@ export default {
   },
   mounted: function () {
     EventHub.$on('status_list.reload_intended', this.getStatuses);
+    EventHub.$on('status_list.intent_to_refresh_bucket', this.refreshBucket);
     EventHub.$on('status.added_to_bucket', this.addToBucket);
     EventHub.$on('status.removed_from_bucket', this.removeFromBucket);
   },

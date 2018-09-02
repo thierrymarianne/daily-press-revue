@@ -57,6 +57,14 @@
         <font-awesome-icon :icon='addedToBucketIcon' />
         <span>{{ bucketAdditionLabel }}</span>
       </button>
+      <button 
+        v-else
+        class='status__web-intent'
+        @click='removeFromBucket'
+      >
+        <font-awesome-icon icon='minus' />
+        <span>Remove from bucket</span>
+      </button>
     </div>
   </div>
 </template>
@@ -141,6 +149,14 @@ export default {
     };
   },
   methods: {
+    removeFromBucket: function () {
+      this.removeStatusFromBucket();
+      EventHub.$emit('status_list.intent_to_refresh_bucket');
+    },
+    removeStatusFromBucket: function () {
+      EventHub.$emit('status.removed_from_bucket', { status: this.status });
+      this.addedToBucket = !this.addedToBucket;      
+    },
     toggleBucketAddition: function () {
       if (this.addedToBucket === false) {
         EventHub.$emit('status.added_to_bucket', { status: this.status });
@@ -148,8 +164,7 @@ export default {
         return;
       }
 
-      EventHub.$emit('status.removed_from_bucket', { status: this.status });
-      this.addedToBucket = !this.addedToBucket;
+      this.removeStatusFromBucket()
     }
   }
 };

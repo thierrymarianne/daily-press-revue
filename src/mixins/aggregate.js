@@ -9,6 +9,11 @@ export default {
           name: aggregateType,
         };
       });
+      aggregateTypes.bucket = {
+        statuses: [],
+        isVisible: false,
+        name: 'bucket',
+      };
 
       return aggregateTypes;
     },
