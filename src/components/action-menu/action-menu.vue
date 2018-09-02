@@ -12,6 +12,10 @@
         v-for='menuItem in menuItemsButPressReview'
       >{{ getMenuLabel(menuItem) }}</button>
       <button 
+        @click='intendToGet("bucket")'
+        :class='getButtonClass("bucket")'
+      >Bucket</button>
+      <button
         class='action-menu__refresh-button'
         @click='refreshStatuses'
       >
@@ -82,6 +86,7 @@ export default {
 
         visibilities[aggregateType] = hasFullMenu
       });
+      visibilities.bucket = hasFullMenu;
 
       return visibilities;
     },

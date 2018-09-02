@@ -12,15 +12,21 @@
         :data-key='aggregateType.name'
         v-for='aggregateType in aggregateTypes'
       >
-        <div 
-          :data-key='status.key'
-          :key='status.key'
-          class='status-list__item'
-          v-show='isAggregateVisible(aggregateType.name)'
-          v-for='status in visibleStatuses.statuses'
-        >
-            <status :status='status' />
+        <div v-if='visibleAggregateHasStatuses'>
+          <div
+            :data-key='status.key'
+            :key='status.key'
+            class='status-list__item'
+            v-show='isAggregateVisible(aggregateType.name)'
+            v-for='status in visibleStatuses.statuses'
+          >
+              <status :status='status' />
+          </div>
         </div>
+        <div
+          v-else-if='isAggregateVisible("bucket")'
+          class='status-list__item-none'
+        >No item has been added to this bucket before.</div>
       </div>
     </transition-group>
   </div>
@@ -41,6 +47,12 @@ export default {
   created: function () {
     this.aggregateTypes = this.declareAggregateTypesFromRoutes(this.routes)
     this.getStatuses({ aggregateType: 'pressReview' });
+  },
+  computed: {
+    visibleAggregateHasStatuses: function () {
+      return this.aggregateTypes[this.visibleStatuses.name]
+      .statuses.length > 0;
+    }
   },
   methods: {
     listClasses: function (aggregateType) {
@@ -106,59 +118,38 @@ export default {
 
       return formattedStatuses;
     },
-    getStatuses: function ({ aggregateType, bustCache }) {
-      const timestamp = (new Date()).getTime();
-      let timestampSuffix = '';
+    switchBetweenVisibleStatuses: function (aggregateType, statuses) {
+      Object.keys(this.aggregateTypes).map((aggregateType) => {
+        this.aggregateTypes[aggregateType].isVisible = false
+      });
+      this.aggregateTypes[aggregateType].isVisible = true
 
+      statuses.statuses = Object.assign({}, this.aggregateTypes[aggregateType].statuses);
+      statuses.name = aggregateType;      
+
+      return statuses;
+    },
+    getStatuses: function ({ aggregateType, bustCache }) {
       let shouldBustCache = false;
-      if (typeof bustCache !== 'undefined') {
+      if ((typeof bustCache !== 'undefined') && (aggregateType !== 'bucket')) {
         shouldBustCache = bustCache;
       }
 
-      if (!this.environment.productionMode) {
-        let timestampSuffix = `?${timestamp}`;
-      }
-
-      if (typeof this.routes === 'undefined') {
+      if (this.shouldGuardAgainstUndefinedRoute()) {
         return;
       }
 
       this.state.fetchedLatestStatusesOfAggregate = aggregateType;
 
-      if (!shouldBustCache && 
-      this.aggregateTypes[aggregateType].statuses.length > 0) {
-        Object.keys(this.aggregateTypes).map((aggregateType) => {
-          this.aggregateTypes[aggregateType].isVisible = false
-        });
-        this.aggregateTypes[aggregateType].isVisible = true
-        this.visibleStatuses.statuses = Object.assign({}, this.aggregateTypes[aggregateType].statuses);
-        this.visibleStatuses.name = aggregateType;
+      if (!shouldBustCache
+      && ((this.aggregateTypes[aggregateType].statuses.length > 0) 
+        || aggregateType === 'bucket')) {
+        this.switchBetweenVisibleStatuses(aggregateType, this.visibleStatuses);
         return;
       }
 
-      const route = `${this.routes[aggregateType]}${timestampSuffix}`;
+      const route = `${this.routes[aggregateType]}${this.getTimestampSuffix()}`;
       const authenticationToken = localStorage.getItem('x-auth-token');
-
-      // Experimenting with fetch
-      if (this.state.useFetch) {
-        const headers = new Headers();
-        headers.append(
-          'x-auth-token',
-          authenticationToken
-        );
-        const requestParams = { 
-          method: 'GET',
-          headers: headers,
-          mode: 'cors',
-          cache: 'default' 
-        };
-
-        const request = new Request(route, requestParams);
-
-        fetch(request).then((response) => {
-          console.log(response);
-        }).catch(error => this.logger.error(error));
-      }
 
       this.loadedContentPercentage = 0;
 
@@ -167,7 +158,7 @@ export default {
           headers: { 'x-auth-token': authenticationToken }
         }
       )
-      .then(response => {
+      .then((response) => {
         this.statuses = null;
         try {
           this.aggregateTypes[aggregateType].statuses = this.formatStatuses(response.data);
@@ -176,19 +167,25 @@ export default {
           return;
         }
 
-        Object.keys(this.aggregateTypes).map((aggregateType) => {
-          this.aggregateTypes[aggregateType].isVisible = false
-        });
-        this.aggregateTypes[aggregateType].isVisible = true
-        this.visibleStatuses.statuses = Object.assign({}, this.aggregateTypes[aggregateType].statuses);
-        this.visibleStatuses.name = aggregateType;
-
+        this.switchBetweenVisibleStatuses(aggregateType, this.visibleStatuses);
         EventHub.$emit('status_list.after_fetch');
       })
-      .catch(e => this.logger.error(e.message, 'status-list', error))
+      .catch(e => this.logger.error(e.message, 'status-list', e))
+    },
+    getTimestampSuffix: function () {
+      const timestamp = (new Date()).getTime();
+      let timestampSuffix = '';
+      if (!this.environment.productionMode) {
+        let timestampSuffix = `?${timestamp}`;
+      }
+
+      return timestampSuffix;      
     },
     isAggregateVisible: function (aggregateType) {
       return aggregateType === this.visibleStatuses.name;
+    },
+    shouldGuardAgainstUndefinedRoute: function () {
+      typeof this.routes === 'undefined';
     },
     sortByPublicationDate: function (statusA, statusB) {
       if (statusA.publishedAt === statusB.publishedAt) {

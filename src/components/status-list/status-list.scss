@@ -10,6 +10,28 @@
 
     &--full-width {
       display: flex;
+
+      &[data-key="bucket"] {
+        align-self: center;
+        background-color: $color-beige-light;
+        border: 1px solid $color-greener;
+        color: $color-even-greener;
+        display: flex;
+        flex-direction: column;
+        font-family: roboto;
+        margin: auto;
+        margin-top: 50vh;
+        padding: 10px;
+        position: fixed;
+        text-align: center;
+        width: 100%;
+        
+        .status-list__list__item-none {
+          display: flex;
+          justify-content: center;
+          width: 100%
+        }
+      }
     }
   }
 

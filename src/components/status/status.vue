@@ -39,16 +39,20 @@
     <div class='status__row'>
       <a class='status__web-intent' :href='urls.reply'>
         <font-awesome-icon icon='reply' />
-        Reply
+        <span>Reply</span>
       </a>
       <a class='status__web-intent' :href='urls.retweet'>
         <font-awesome-icon icon='retweet' />
-        Retweet
+        <span>Retweet</span>
       </a>
       <a class='status__web-intent' :href='urls.like'>
         <font-awesome-icon icon='heart' />
-        Like
+        <span>Like</span>
       </a>
+      <button class='status__web-intent' @click='toggleBucketAddition'>
+        <font-awesome-icon :icon='addedToBucketIcon' />
+        <span>{{ bucketAdditionLabel }}</span>
+      </button>
     </div>
   </div>
 </template>
@@ -63,6 +67,20 @@ export default {
     },
   },
   computed: {
+    addedToBucketIcon: function () {
+      if (!this.addedToBucket) {
+        return 'plus';
+      }
+
+      return 'minus';
+    },
+    bucketAdditionLabel: function () {
+      if (!this.addedToBucket) {
+        return 'Add to bucket';
+      }
+
+      return 'Remove from bucket';
+    },
     avatarUrl: function () {
       return this.status.avatarUrl;
     },
@@ -107,6 +125,16 @@ export default {
       return `https://twitter.com/${this.status.usernameOfRetweetingMember}`;
     }    
   },
+  data: function () {
+    return {
+      addedToBucket: false,
+    };
+  },
+  methods: {
+    toggleBucketAddition: function () {
+      this.addedToBucket = !this.addedToBucket;
+    }
+  }
 };
 </script>
 
