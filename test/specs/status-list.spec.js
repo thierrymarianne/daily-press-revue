@@ -96,7 +96,7 @@ describe('Status list', () => {
       {
         attachToDocument: true,
         localVue,
-        store
+        store,
       },
     );
 
