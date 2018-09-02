@@ -33,10 +33,14 @@
 </template>
 
 <script>
+import { createNamespacedHelpers } from 'vuex';
+const { mapActions, mapGetters, mapMutations } = createNamespacedHelpers('bucket');
+
 import ApiMixin  from '../../mixins/api';
 import EventHub from '../../modules/event-hub';
 import Status from '../status/status.vue';
 import SharedState from '../../modules/shared-state';
+import ActionTypes from '../../store/bucket-action-types';
 
 export default {
   components: {
@@ -45,7 +49,9 @@ export default {
   mixins: [ApiMixin],
   name: 'status-list',
   created: function () {
-    this.aggregateTypes = this.declareAggregateTypesFromRoutes(this.routes)
+    this.aggregateTypes = this.declareAggregateTypesFromRoutes(this.routes);
+    this.refreshBucket();
+
     this.getStatuses({ aggregateType: 'pressReview' });
   },
   computed: {
@@ -55,6 +61,32 @@ export default {
     }
   },
   methods: {
+    ...mapActions([
+      ActionTypes.PERSIST_ADDITION_TO_BUCKET,
+      ActionTypes.PERSIST_REMOVAL_FROM_BUCKET,
+      ActionTypes.RESTORE_BUCKET_FROM_PERSISTENCE_LAYER,
+    ]),
+    ...mapGetters([
+      'getStatusesInBucket',
+      'isInBucket',
+      'isStatusInBucket',
+    ]),
+    refreshBucket: function () {
+      const statusesInBucket = this.getStatusesInBucket();
+      const statusCollection = this.getCollectionOfStatusesInBucket(statusesInBucket);
+      this.aggregateTypes.bucket = {
+        statuses: statusCollection,
+        isVisible: false,
+        name: 'bucket',
+      };
+    },
+    getCollectionOfStatusesInBucket: function (statuses) {
+      if (statuses === undefined) {
+        return [];
+      }
+
+      return Object.values(statuses);
+    },
     listClasses: function (aggregateType) {
       const classNames = {
          'status-list__list': true
@@ -98,7 +130,12 @@ export default {
           text: this.parseFromString(status.text),
           url: status.url,
           isVisible: false,
+          isInBucket: false,
           links
+        }
+
+        if (this.isStatusInBucket()(formattedStatus.statusId)) {
+          formattedStatus.isInBucket = true;
         }
 
         formattedStatus.retweet = status.retweet;
@@ -142,8 +179,8 @@ export default {
       this.state.fetchedLatestStatusesOfAggregate = aggregateType;
 
       if (!shouldBustCache
-      && ((this.aggregateTypes[aggregateType].statuses.length > 0) 
-        || aggregateType === 'bucket')) {
+      && (aggregateType === 'bucket')
+        || (this.aggregateTypes[aggregateType].statuses.length > 0)) {
         this.switchBetweenVisibleStatuses(aggregateType, this.visibleStatuses);
         return;
       }
@@ -151,7 +188,7 @@ export default {
       const route = `${this.routes[aggregateType]}${this.getTimestampSuffix()}`;
       const authenticationToken = localStorage.getItem('x-auth-token');
 
-      this.loadedContentPercentage = 0;
+      this.replaceBucketFromPersistentLayer();
 
       this.$http.get(
         route, {
@@ -206,9 +243,19 @@ export default {
           'text/html');
       return dom.body.textContent;
     },
+    addToBucket: function ({ status }) {
+      this.persistAdditionToBucket(status);
+      this.refreshBucket();
+    },
+    removeFromBucket: function ({ status }) {
+      this.persistRemovalFromBucket(status);
+      this.refreshBucket();
+    }
   },
   mounted: function () {
-    EventHub.$on('status_list.reload_intended', this.getStatuses)
+    EventHub.$on('status_list.reload_intended', this.getStatuses);
+    EventHub.$on('status.added_to_bucket', this.addToBucket);
+    EventHub.$on('status.removed_from_bucket', this.removeFromBucket);
   },
   data: function () {
     return {
@@ -217,7 +264,6 @@ export default {
       visibleStatuses: SharedState.state.visibleStatuses,
       errors: [],
       errorMessages: SharedState.errors,
-      loadedContentPercentage: SharedState.state.loadedContentPercentage,
       logger: SharedState.logger,
       logLevel: SharedState.logLevel,
       environment: SharedState.getEnvironmentParameters(),

@@ -49,7 +49,11 @@
         <font-awesome-icon icon='heart' />
         <span>Like</span>
       </a>
-      <button class='status__web-intent' @click='toggleBucketAddition'>
+      <button 
+        v-if='!isBucketVisible'
+        class='status__web-intent'
+        @click='toggleBucketAddition'
+      >
         <font-awesome-icon :icon='addedToBucketIcon' />
         <span>{{ bucketAdditionLabel }}</span>
       </button>
@@ -58,6 +62,9 @@
 </template>
 
 <script>
+import EventHub from '../../modules/event-hub';
+import SharedState from '../../modules/shared-state';
+
 export default {
   name: 'status',
   props: {
@@ -83,6 +90,9 @@ export default {
     },
     avatarUrl: function () {
       return this.status.avatarUrl;
+    },
+    isBucketVisible: function () {
+      return SharedState.state.visibleStatuses.name === "bucket";
     },
     isRetweet: function () {
       if (typeof this.status === 'undefined') {
@@ -127,11 +137,18 @@ export default {
   },
   data: function () {
     return {
-      addedToBucket: false,
+      addedToBucket: this.status.isInBucket,
     };
   },
   methods: {
     toggleBucketAddition: function () {
+      if (this.addedToBucket === false) {
+        EventHub.$emit('status.added_to_bucket', { status: this.status });
+        this.addedToBucket = !this.addedToBucket;
+        return;
+      }
+
+      EventHub.$emit('status.removed_from_bucket', { status: this.status });
       this.addedToBucket = !this.addedToBucket;
     }
   }
