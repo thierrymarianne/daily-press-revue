@@ -49,7 +49,7 @@
         <font-awesome-icon icon='heart' />
         <span>Like</span>
       </a>
-      <button 
+      <button
         v-if='!isBucketVisible'
         class='status__web-intent'
         @click='toggleBucketAddition'
@@ -66,17 +66,33 @@
         <span>Remove from bucket</span>
       </button>
     </div>
+    <button
+      class='status__web-intent'
+      v-if='isBucketVisible'
+      @click='syncStatus'
+    >
+      <font-awesome-icon
+        class='action-menu__replied-icon'
+        icon='sync' 
+      />
+      <span>Refresh</span>
+    </button>    
   </div>
 </template>
 
 <script>
+import { createNamespacedHelpers } from 'vuex';
+const { mapActions, mapGetters, mapMutations } = createNamespacedHelpers('bucket');
+
+import ApiMixin  from '../../mixins/api';
 import EventHub from '../../modules/event-hub';
 import SharedState from '../../modules/shared-state';
 
 export default {
   name: 'status',
+  mixins: [ApiMixin],
   props: {
-    status: {
+    statusAtFirst: {
       type: Object,
       required: true,
     },
@@ -145,10 +161,95 @@ export default {
   },
   data: function () {
     return {
-      addedToBucket: this.status.isInBucket,
+      addedToBucket: this.statusAtFirst.isInBucket,
+      errorMessages: SharedState.errors,
+      logger: SharedState.logger,
+      status: this.statusAtFirst
     };
   },
   methods: {
+    ...mapGetters([
+      'isStatusInBucket',
+    ]),
+    formatStatuses: function (statuses) {
+      if (typeof statuses === 'undefined' || statuses === null) {
+        return [];
+      }
+
+      let formattedStatuses = [];
+
+      if (typeof statuses.forEach !== 'function') {
+        throw Error(this.errorMessages.REQUIRED_COLLECTION);
+      }
+
+      statuses.forEach((status) => {
+        if ((typeof status.text === 'undefined')
+          || (typeof status.text.match !== 'function')) {
+          return;
+        }
+
+        let links = status.text.match(/http(?:s)?:\/\/\S+/g);
+
+        if (links === null || links === undefined || links.length <= 1) {
+          links = [];
+        }
+
+        const formattedStatus = {
+          username: status.username,
+          avatarUrl: status.avatar_url,
+          publishedAt: new Date(status.published_at),
+          statusId: status.status_id,
+          text: this.parseFromString(status.text),
+          url: status.url,
+          isVisible: false,
+          isInBucket: false,
+          links
+        }
+
+        if (status.status_replied_to) {
+          formattedStatus.statusRepliedTo = this.formatStatuses([status.status_replied_to])[0];
+        }
+
+        if (this.isStatusInBucket()(formattedStatus.statusId)) {
+          formattedStatus.isInBucket = true;
+        }
+
+        formattedStatus.retweet = status.retweet;
+        if (status.retweet) {
+          formattedStatus.usernameOfRetweetingMember = status.username_of_retweeting_member;
+        }
+
+        formattedStatuses.push(formattedStatus);
+      });
+
+      formattedStatuses = formattedStatuses.sort(this.sortByPublicationDate);
+      formattedStatuses = formattedStatuses.reduce((statuses, status) => {
+        statuses.indexOf(status)
+        statuses[statuses.indexOf(status)].key = statuses.indexOf(status);
+        return statuses;
+      },  formattedStatuses);
+
+      return formattedStatuses;
+    },
+    sortByPublicationDate: function (statusA, statusB) {
+      if (statusA.publishedAt === statusB.publishedAt) {
+        return 0;
+      }
+
+      if (statusA.publishedAt < statusB.publishedAt) {
+        return 1;
+      }
+
+      return -1;
+    },
+    // @see https://developer.mozilla.org/en-US/docs/Web/API/DOMParser
+    parseFromString: function (subject) {
+      const parser = new DOMParser();
+      const dom = parser.parseFromString(
+          '<!doctype html><body>' + subject,
+          'text/html');
+      return dom.body.textContent;
+    },
     removeFromBucket: function () {
       this.removeStatusFromBucket();
       EventHub.$emit('status_list.intent_to_refresh_bucket');
@@ -156,6 +257,24 @@ export default {
     removeStatusFromBucket: function () {
       EventHub.$emit('status.removed_from_bucket', { status: this.status });
       this.addedToBucket = !this.addedToBucket;      
+    },
+    syncStatus: function () {
+      const method = this.routes.actions.syncStatus.method;
+      let route = this.routes.actions.syncStatus.route;
+      const parameters = this.routes.actions.syncStatus.parameters;
+
+      route = route.replace(':statusId', this.status.statusId);
+
+      const authenticationToken = localStorage.getItem('x-auth-token');
+      this.$http[method](route, {
+        headers: { 'x-auth-token': authenticationToken }
+      }).
+      then(({ data }) => {
+        const formattedStatuses = this.formatStatuses(data);
+        this.status = formattedStatuses[0];
+        EventHub.$emit('status_list.intent_to_refresh_bucket');
+      }).catch(e => this.logger.error(e.message, 'status', e));
+
     },
     toggleBucketAddition: function () {
       if (this.addedToBucket === false) {

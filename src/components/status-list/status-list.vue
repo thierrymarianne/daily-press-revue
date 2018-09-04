@@ -21,7 +21,7 @@
             v-show='isAggregateVisible(aggregateType.name)'
             v-for='status in visibleStatuses.statuses'
           >
-            <status :status='status' />
+            <status :status-at-first='status' />
           </div>
         </template>
         <div
@@ -121,7 +121,6 @@ export default {
       return classNames;
     },
     formatStatuses: function (statuses) {
-
       if (typeof statuses === 'undefined' || statuses === null) {
         return [];
       }
@@ -222,7 +221,7 @@ export default {
         try {
           this.aggregateTypes[aggregateType].statuses = this.formatStatuses(response.data);
         } catch (error) {
-          SharedState.logger.error(error.message, 'status-list');
+          this.logger.error(error.message, 'status-list');
           return;
         }
 
