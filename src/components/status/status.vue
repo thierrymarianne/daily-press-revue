@@ -58,7 +58,7 @@
         <span>{{ bucketAdditionLabel }}</span>
       </button>
       <button 
-        v-else
+        v-else-if='canBeRemovedFromBucket'
         class='status__web-intent'
         @click='removeFromBucket'
       >
@@ -68,7 +68,7 @@
     </div>
     <button
       class='status__web-intent'
-      v-if='isBucketVisible'
+      v-if='isBucketVisible && canBeRefreshed'
       @click='syncStatus'
     >
       <font-awesome-icon
@@ -85,17 +85,27 @@ import { createNamespacedHelpers } from 'vuex';
 const { mapActions, mapGetters, mapMutations } = createNamespacedHelpers('bucket');
 
 import ApiMixin  from '../../mixins/api';
+import StatusFormat  from '../../mixins/status-format';
 import EventHub from '../../modules/event-hub';
 import SharedState from '../../modules/shared-state';
+import ActionTypes from '../../store/bucket-action-types';
 
 export default {
   name: 'status',
-  mixins: [ApiMixin],
+  mixins: [ApiMixin, StatusFormat],
   props: {
     statusAtFirst: {
       type: Object,
       required: true,
     },
+    canBeRemovedFromBucket: {
+      type: Boolean,
+      default: true
+    },
+    canBeRefreshed: {
+      type: Boolean,
+      default: true
+    }
   },
   computed: {
     addedToBucketIcon: function () {
@@ -116,7 +126,7 @@ export default {
       return this.status.avatarUrl;
     },
     isBucketVisible: function () {
-      return SharedState.state.visibleStatuses.name === "bucket";
+      return this.visibleStatuses.name === "bucket";
     },
     isRetweet: function () {
       if (typeof this.status === 'undefined') {
@@ -164,92 +174,18 @@ export default {
       addedToBucket: this.statusAtFirst.isInBucket,
       errorMessages: SharedState.errors,
       logger: SharedState.logger,
-      status: this.statusAtFirst
+      status: this.statusAtFirst,
+      visibleStatuses: SharedState.state.visibleStatuses
     };
   },
   methods: {
+    ...mapActions([
+      ActionTypes.PERSIST_CONVERSATION_ADDITION_TO_BUCKET,
+      ActionTypes.PERSIST_CONVERSATION_REMOVAL_FROM_BUCKET,
+    ]),
     ...mapGetters([
       'isStatusInBucket',
     ]),
-    formatStatuses: function (statuses) {
-      if (typeof statuses === 'undefined' || statuses === null) {
-        return [];
-      }
-
-      let formattedStatuses = [];
-
-      if (typeof statuses.forEach !== 'function') {
-        throw Error(this.errorMessages.REQUIRED_COLLECTION);
-      }
-
-      statuses.forEach((status) => {
-        if ((typeof status.text === 'undefined')
-          || (typeof status.text.match !== 'function')) {
-          return;
-        }
-
-        let links = status.text.match(/http(?:s)?:\/\/\S+/g);
-
-        if (links === null || links === undefined || links.length <= 1) {
-          links = [];
-        }
-
-        const formattedStatus = {
-          username: status.username,
-          avatarUrl: status.avatar_url,
-          publishedAt: new Date(status.published_at),
-          statusId: status.status_id,
-          text: this.parseFromString(status.text),
-          url: status.url,
-          isVisible: false,
-          isInBucket: false,
-          links
-        }
-
-        if (status.status_replied_to) {
-          formattedStatus.statusRepliedTo = this.formatStatuses([status.status_replied_to])[0];
-        }
-
-        if (this.isStatusInBucket()(formattedStatus.statusId)) {
-          formattedStatus.isInBucket = true;
-        }
-
-        formattedStatus.retweet = status.retweet;
-        if (status.retweet) {
-          formattedStatus.usernameOfRetweetingMember = status.username_of_retweeting_member;
-        }
-
-        formattedStatuses.push(formattedStatus);
-      });
-
-      formattedStatuses = formattedStatuses.sort(this.sortByPublicationDate);
-      formattedStatuses = formattedStatuses.reduce((statuses, status) => {
-        statuses.indexOf(status)
-        statuses[statuses.indexOf(status)].key = statuses.indexOf(status);
-        return statuses;
-      },  formattedStatuses);
-
-      return formattedStatuses;
-    },
-    sortByPublicationDate: function (statusA, statusB) {
-      if (statusA.publishedAt === statusB.publishedAt) {
-        return 0;
-      }
-
-      if (statusA.publishedAt < statusB.publishedAt) {
-        return 1;
-      }
-
-      return -1;
-    },
-    // @see https://developer.mozilla.org/en-US/docs/Web/API/DOMParser
-    parseFromString: function (subject) {
-      const parser = new DOMParser();
-      const dom = parser.parseFromString(
-          '<!doctype html><body>' + subject,
-          'text/html');
-      return dom.body.textContent;
-    },
     removeFromBucket: function () {
       this.removeStatusFromBucket();
       EventHub.$emit('status_list.intent_to_refresh_bucket');
@@ -263,6 +199,8 @@ export default {
       let route = this.routes.actions.syncStatus.route;
       const parameters = this.routes.actions.syncStatus.parameters;
 
+      const statusIndex = Object.values(this.visibleStatuses.statuses).indexOf(this.status);
+
       route = route.replace(':statusId', this.status.statusId);
 
       const authenticationToken = localStorage.getItem('x-auth-token');
@@ -270,9 +208,25 @@ export default {
         headers: { 'x-auth-token': authenticationToken }
       }).
       then(({ data }) => {
-        const formattedStatuses = this.formatStatuses(data);
+        const syncing = true;
+        const formattedStatuses = this.formatStatuses(data, syncing);
         this.status = formattedStatuses[0];
-        EventHub.$emit('status_list.intent_to_refresh_bucket');
+
+        if (this.status.statusRepliedTo) {
+          let conversation = [this.status, this.status.statusRepliedTo]; 
+          let repliedToStatus = this.status.statusRepliedTo;
+          while ('statusRepliedTo' in repliedToStatus) {
+            conversation.push(repliedToStatus.statusRepliedTo);
+            repliedToStatus = repliedToStatus.statusRepliedTo;
+          }
+
+          const reversedConversation = conversation.reverse();
+          this.persistConversationAdditionToBucket({
+            conversation: reversedConversation,
+            statusId: this.status.statusId
+          });
+          // this.removeFromBucket(this.status);
+        }
       }).catch(e => this.logger.error(e.message, 'status', e));
 
     },
