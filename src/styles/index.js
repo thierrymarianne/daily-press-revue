@@ -4,6 +4,7 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import {
   faArrowAltCircleUp,
   faArrowAltCircleDown,
+  faComments,
   faHeart,
   faMinus,
   faPlus,
@@ -19,6 +20,7 @@ import styles from './global.scss';
 // See https://fontawesome.com/how-to-use/on-the-web/using-with/vuejs
 library.add(faArrowAltCircleUp);
 library.add(faArrowAltCircleDown);
+library.add(faComments);
 library.add(faHeart);
 library.add(faMinus);
 library.add(faPlus);

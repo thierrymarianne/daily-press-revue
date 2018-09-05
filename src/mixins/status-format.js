@@ -9,18 +9,24 @@ export default {
       'isConversationInBucket',
       'getConversationsInBucket'
     ]),
-    expandConversations: function(statuses) {
-      const conversations = statuses.map(status => {
+    expandConversations: function(statuses, event) {
+      return statuses.map(status => {
         if (!this.isConversationInBucket()(status.statusId)) {
           return status;
         }
 
-        const conversationsInBucket = this.getConversationsInBucket();
-        status.conversation = conversationsInBucket[status.statusId];
+        if (
+          typeof event !== 'undefined' &&
+          typeof event.statusId !== 'undefined' &&
+          event.statusId === status.statusId
+        ) {
+          const conversationsInBucket = this.getConversationsInBucket();
+          status.conversation = conversationsInBucket[status.statusId];
+          return status;
+        }
+
         return status;
       });
-
-      return conversations;
     },
     formatStatuses: function(statuses, fromSync) {
       if (typeof statuses === 'undefined' || statuses === null) {
@@ -61,6 +67,7 @@ export default {
           url: status.url,
           isVisible: false,
           isInBucket: false,
+          media: status.media,
           links
         };
 

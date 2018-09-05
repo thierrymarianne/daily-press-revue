@@ -98,6 +98,9 @@ const Bucket = {
       localStorage.setItem('bucket', JSON.stringify(bucket));
 
       commit(MutationTypes.REMOVE_FROM_BUCKET, status);
+      EventHub.$emit('status.removal_from_bucket_intended', {
+        statusId: status.statusId
+      });
     },
     [ActionTypes.PERSIST_CONVERSATION_ADDITION_TO_BUCKET](
       { commit },
@@ -106,7 +109,7 @@ const Bucket = {
       ensurePersistentBucketExists();
       const bucket = JSON.parse(localStorage.getItem('bucket'));
       if (typeof bucket.conversations[statusId] !== 'undefined') {
-        EventHub.$emit('status_list.intent_to_refresh_bucket');
+        EventHub.$emit('status_list.intent_to_refresh_bucket', { statusId });
         return;
       }
 
@@ -117,7 +120,7 @@ const Bucket = {
         conversation,
         statusId
       });
-      EventHub.$emit('status_list.intent_to_refresh_bucket');
+      EventHub.$emit('status_list.intent_to_refresh_bucket', { statusId });
     },
     [ActionTypes.PERSIST_CONVERSATION_REMOVAL_FROM_BUCKET](
       { commit },
