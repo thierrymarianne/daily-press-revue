@@ -10,7 +10,7 @@ import {
   faRedoAlt,
   faReply,
   faRetweet,
-  faSync,
+  faSync
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
@@ -32,6 +32,6 @@ Vue.component('font-awesome-icon', FontAwesomeIcon);
 export default {
   Styles: styles,
   components: {
-    'font-awesome-icon': FontAwesomeIcon,
-  },
+    'font-awesome-icon': FontAwesomeIcon
+  }
 };
