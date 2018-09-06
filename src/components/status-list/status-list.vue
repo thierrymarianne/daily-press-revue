@@ -1,6 +1,7 @@
 <template>
   <div class="status-list">
     <transition-group
+      class="status-list__transition"
       name="custom-classes-transition"
       enter-active-class="animated slideInLeft"
       leave-active-class="animated slideInLeft"
