@@ -79,13 +79,6 @@ $color-double-greener: darken($color-greener, 10%);
     justify-self: center;
   }
 
-  &__progress-bar {
-    background-color: $color-greener;
-    display: flex;
-    height: 4px;
-    width: 100%;  
-  }
-
   &__refresh-button,
   &__replied-button {
     background: transparent;

@@ -34,9 +34,7 @@
         class="action-menu__toggle-menu-icon"
       />
     </div>
-    <div
-      :style="'width: ' + loadedContentPercentage + '%'"
-      class="action-menu__progress-bar"/>
+    />
   </div>
 </template>
 
