@@ -15,15 +15,26 @@
         :class="getButtonClass('bucket')"
         @click="intendToGet('bucket')"
       >Bucket</button>
-      <button
-        class="action-menu__refresh-button"
-        @click="refreshStatuses"
-      >
-        <font-awesome-icon
-          class="action-menu__refresh-icon"
-          icon="redo-alt"
-        />
-      </button>
+      <div class="action-menu__action-wrapper">
+        <button
+          class="action-menu__button action-menu__refresh-button"
+          @click="showStatusesHavingMedia"
+        >
+          <font-awesome-icon
+            class="action-menu__refresh-icon"
+            icon="images"
+          />
+        </button>
+        <button
+          :class="getActionMenuButtonClasses"
+          @click="showStatusesInAggregateTop10O"
+        >
+          <font-awesome-icon
+            icon="fire"
+            class="action-menu__toggle-menu-icon"
+          />
+        </button>
+      </div>
     </div>
     <div
       :class="getActionMenuButtonClasses"
@@ -129,10 +140,18 @@ export default {
         aggregateType
       });
     },
-    refreshStatuses() {
+    showStatusesHavingMedia() {
       EventHub.$emit('status_list.reload_intended', {
         aggregateType: this.visibleStatuses.name,
-        bustCache: true
+        bustCache: true,
+        filter: 'media'
+      });
+    },
+    showStatusesInAggregateTop10O() {
+      EventHub.$emit('status_list.reload_intended', {
+        aggregateType: this.visibleStatuses.name,
+        bustCache: true,
+        filter: 'top100'
       });
     }
   }

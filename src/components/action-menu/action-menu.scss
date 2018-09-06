@@ -72,6 +72,23 @@ $color-double-greener: darken($color-greener, 10%);
     }
   }
 
+  &__action-wrapper {
+    flex-direction: row;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+
+    .action-menu__button {
+      background-color: transparent;
+      border-color: transparent;
+      border-top: 1px solid $color-greener;
+
+      &:first-child {
+        border-right: 1px solid $color-greener;
+      }
+    }
+  }
+
   &__toggle-menu-icon {
     display: flex;
     font-size: 1.5em;
