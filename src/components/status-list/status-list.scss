@@ -84,7 +84,6 @@
     @extend .status-list__list;
     display: flex;
     transition: 1s;
-    max-width: calc(100vw - 2rem);
   }
 
   &__item {

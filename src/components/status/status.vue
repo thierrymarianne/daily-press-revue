@@ -54,7 +54,10 @@
         <div
           v-for="(document, index) in status.media"
           :key="index"
-          :style="getDocumentProperties(document)" />
+          :style="getDocumentProperties(document)"
+          class="status__media-item"
+          @click="openMediaItem(document)"
+        />
       </div>
     </div>
     <div class="status__row">
@@ -146,7 +149,7 @@ import ActionTypes from '../../store/bucket-action-types';
 const { mapActions, mapGetters } = createNamespacedHelpers('bucket');
 
 export default {
-  name: 'Status',
+  name: 'status',
   mixins: [ApiMixin, StatusFormat],
   props: {
     statusAtFirst: {
@@ -289,6 +292,9 @@ export default {
       this.addedToBucket = !this.addedToBucket;
       EventHub.$emit('status_list.intent_to_refresh_bucket');
     },
+    openMediaItem(document) {
+      EventHub.$emit('modal.show_intended', { media: document });
+    },
     removeFromBucket() {
       this.removeStatusFromBucket();
       EventHub.$emit('status_list.intent_to_refresh_bucket');
@@ -308,8 +314,7 @@ export default {
       })
         .then(({ data }) => {
           const syncing = true;
-          const formattedStatuses = this.formatStatuses(data, syncing);
-          this.status = formattedStatuses[0];
+          [this.status] = this.formatStatuses(data, syncing);
 
           if (this.status.statusRepliedTo) {
             const conversation = [this.status, this.status.statusRepliedTo];

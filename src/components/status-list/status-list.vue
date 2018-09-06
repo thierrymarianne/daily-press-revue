@@ -55,7 +55,7 @@ import ActionTypes from '../../store/bucket-action-types';
 const { mapActions, mapGetters } = createNamespacedHelpers('bucket');
 
 export default {
-  name: 'StatusList',
+  name: 'status-list',
   components: {
     Conversation,
     Status
@@ -173,7 +173,11 @@ export default {
         (!shouldBustCache && aggregateType === 'bucket') ||
         this.aggregateTypes[aggregateType].statuses.length > 0
       ) {
-        this.switchBetweenVisibleStatuses(aggregateType, this.visibleStatuses, filter);
+        this.switchBetweenVisibleStatuses(
+          aggregateType,
+          this.visibleStatuses,
+          filter
+        );
         return;
       }
 
@@ -189,7 +193,9 @@ export default {
         .then(response => {
           this.statuses = null;
           try {
-            this.aggregateTypes[aggregateType].statuses = this.formatStatuses(response.data);
+            this.aggregateTypes[aggregateType].statuses = this.formatStatuses(
+              response.data
+            );
           } catch (error) {
             this.logger.error(error.message, 'status-list');
             return;

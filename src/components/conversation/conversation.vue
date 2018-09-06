@@ -17,7 +17,7 @@
 import Status from '../status/status.vue';
 
 export default {
-  name: 'Conversation',
+  name: 'conversation',
   components: {
     Status
   },
