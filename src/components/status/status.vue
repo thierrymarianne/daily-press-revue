@@ -204,7 +204,7 @@ export default {
       }
 
       const publicationDate = new Date(this.status.publishedAt);
-      return `${publicationDate.toDateString()} ${publicationDate.toTimeString()}`;
+      return this.$moment(publicationDate).format('LLLL');
     },
     memberTimelineUrl() {
       if (typeof this.status === 'undefined') {
