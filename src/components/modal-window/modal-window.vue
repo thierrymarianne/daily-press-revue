@@ -1,17 +1,17 @@
 <template>
   <div
     v-if="isVisible"
-    class="modal"
+    class="modal-window"
     @click="hide"
     @shortkey="hide()"
   >
     <div
       :style="mediaStyle"
-      class="modal__image"
+      class="modal-window__image"
     />
     <div
       v-shortkey="['esc']"
-      class="modal-overlay"
+      class="modal-window-overlay"
     />
   </div>
 </template>
@@ -21,7 +21,7 @@ import { css } from 'emotion';
 import EventHub from '../../modules/event-hub';
 
 export default {
-  name: 'modal',
+  name: 'modal-window',
   data() {
     return {
       isVisible: false,
@@ -32,7 +32,7 @@ export default {
     };
   },
   mounted() {
-    EventHub.$on('modal.show_intended', this.show);
+    EventHub.$on('modal_window.show_intended', this.show);
     this.noOverflowStyle = css`
       overflow-y: hidden;
     `;
@@ -68,5 +68,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import './modal.scss';
+@import './modal-window.scss';
 </style>

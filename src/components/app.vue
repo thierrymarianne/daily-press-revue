@@ -2,19 +2,19 @@
   <div class='app'>
     <action-menu />
     <router-view></router-view>
-    <modal />
+    <modal-window />
   </div>
 </template>
 
 <script>
 import ActionMenu from './action-menu/action-menu.vue';
-import Modal from './modal/modal.vue';
+import ModalWindow from './modal-window/modal-window.vue';
 
 export default {
   name: 'app',
   components: {
     ActionMenu,
-    Modal
+    ModalWindow
   }
 };
 </script>

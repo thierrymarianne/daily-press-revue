@@ -293,7 +293,7 @@ export default {
       EventHub.$emit('status_list.intent_to_refresh_bucket');
     },
     openMediaItem(document) {
-      EventHub.$emit('modal.show_intended', { media: document });
+      EventHub.$emit('modal_window.show_intended', { media: document });
     },
     removeFromBucket() {
       this.removeStatusFromBucket();
