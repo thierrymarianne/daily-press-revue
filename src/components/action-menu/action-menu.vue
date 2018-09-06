@@ -6,8 +6,9 @@
         @click="intendToGet('pressReview')"
       >Press Review</button>
       <button
-        v-for="menuItem in menuItemsButPressReview"
+        v-for="(menuItem, index) in menuItemsButPressReview"
         v-if="menuItem !== 'actions' && isVisible[menuItem]"
+        :key="index"
         :class="getButtonClass(menuItem)"
         @click="intendToGet(menuItem)"
       >{{ getMenuLabel(menuItem) }}</button>
@@ -36,15 +37,11 @@
         </button>
       </div>
     </div>
-    <div
+    <font-awesome-icon
       :class="getActionMenuButtonClasses"
+      :icon="getToggleMenuIcon"
+      class="action-menu__toggle-menu-icon"
       @click="showMenu = !showMenu"
-    >
-      <font-awesome-icon
-        :icon="getToggleMenuIcon"
-        class="action-menu__toggle-menu-icon"
-      />
-    </div>
     />
   </div>
 </template>

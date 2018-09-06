@@ -58,7 +58,7 @@
         >{{ link }}</a>
       </div>
       <button
-        v-if="isBucketVisible && isConversationInBucket()(status.statusId) && canBeRefreshed"
+        v-if="isAllowedToOpenConversation"
         class="status__web-intent status__web-intent--open-conversation"
         @click="syncStatus"
       >
@@ -157,6 +157,11 @@ export default {
     };
   },
   computed: {
+    isAllowedToOpenConversation() {
+      return this.isBucketVisible &&
+        this.isConversationInBucket()(this.status.statusId) &&
+        this.canBeRefreshed;
+    },
     addedToBucketIcon() {
       if (!this.addedToBucket) {
         return 'plus';
