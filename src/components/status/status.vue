@@ -2,6 +2,12 @@
   <div class="status">
     <div class="status__row">
       <div class="status__publication-date">{{ publicationDate }}</div>
+      <div class="status__vanity-metrics">
+        <font-awesome-icon icon="retweet" />
+        <span>{{ retweet }}</span>
+        <font-awesome-icon icon="heart" />
+        <span>{{ favorite }}</span>
+      </div>
     </div>
     <div 
       v-if="isRetweet" 
@@ -179,6 +185,12 @@ export default {
     avatarUrl() {
       return this.status.avatarUrl;
     },
+    favorite() {
+      return this.status.totalLike || 0;
+    },
+    retweet() {
+      return this.status.totalRetweet || 0;
+    },
     isBucketVisible() {
       return this.visibleStatuses.name === 'bucket';
     },
@@ -239,7 +251,7 @@ export default {
     ]),
     ...mapGetters(['isStatusInBucket', 'isConversationInBucket']),
     getBackgroundProperties(document) {
-      return `url(${document.url}) center / cover no-repeat`;
+      return `url(${document.url}) center / 50vw no-repeat`;
     },
     getDocumentProperties(document) {
       return {
