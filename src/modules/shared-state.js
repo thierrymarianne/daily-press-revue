@@ -85,12 +85,9 @@ const errors = {
 };
 
 const state = {
-  actions: {
-    fetchedLatestStatusesOfAggregate: null
-  },
   visibleStatuses: {
     statuses: {},
-    name: 'pressReview'
+    name: 'press-review'
   }
 };
 

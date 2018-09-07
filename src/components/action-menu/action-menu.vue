@@ -2,16 +2,21 @@
   <div class="action-menu">
     <div :class="getActionMenuContainerClasses">
       <button
-        :class="getButtonClass('pressReview')"
-        @click="intendToGet('pressReview')"
+        :class="getButtonClass('Press review')"
+        @click="intendToGet('Press review')"
       >Press Review</button>
-      <button
+
+      <router-link
         v-for="(menuItem, index) in menuItemsButPressReview"
-        v-if="menuItem !== 'actions' && isVisible[menuItem]"
-        :key="index"
+        :key='index'
+        :to='getPathTo(menuItem)'
         :class="getButtonClass(menuItem)"
-        @click="intendToGet(menuItem)"
-      >{{ getMenuLabel(menuItem) }}</button>
+        active-class='action-menu__get-statuses--active'
+        exact
+        tag='button'
+        @click.native="intendToGetAggregate(menuItem)"
+      >{{ getMenuLabel(menuItem) }}</router-link>
+
       <button
         :class="getButtonClass('bucket')"
         @click="intendToGet('bucket')"
@@ -52,13 +57,12 @@ import EventHub from '../../modules/event-hub';
 import SharedState from '../../modules/shared-state';
 
 export default {
-  name: 'ActionMenu',
+  name: 'action-menu',
   mixins: [ApiMixin],
   data() {
     return {
       showMenu: false,
-      visibleStatuses: SharedState.state.visibleStatuses,
-      loadedContentPercentage: SharedState.state.loadedContentPercentage
+      visibleStatuses: SharedState.state.visibleStatuses
     };
   },
   computed: {
@@ -98,7 +102,7 @@ export default {
           return;
         }
 
-        if (aggregateType === 'pressReview') {
+        if (aggregateType === 'Press review') {
           return;
         }
 
@@ -109,30 +113,58 @@ export default {
       return visibilities;
     },
     menuItemsButPressReview() {
-      const routeNames = Object.keys(this.routes);
-      return routeNames.sort();
+      const routeNames = [];
+      Object.values(this.routes).forEach(route => {
+        if (
+          route.name === 'Press review' ||
+          typeof route.name === 'undefined'
+        ) {
+          return;
+        }
+        routeNames.push(route.name);
+      });
+
+      return routeNames.sort().filter(route => {
+        const aggregateIndex = this.getAggregateIndex(route);
+        return aggregateIndex !== 'actions' && this.isVisible[aggregateIndex];
+      });
     }
   },
   methods: {
-    getButtonClass(aggregateType) {
-      const classes = { 'action-menu__get-statuses': true };
-
-      if (this.visibleStatuses.name === aggregateType) {
-        classes['action-menu__get-statuses--active'] = true;
-      }
-
-      return classes;
+    getAggregateIndex(aggregateType) {
+      return aggregateType.replace(/\s+/g, '-').toLowerCase();
+    },
+    getButtonClass() {
+      return { 'action-menu__get-statuses': true };
     },
     getMenuLabel(aggregateType) {
       return aggregateType;
     },
+    getPathTo(aggregateType) {
+      return {
+        name: 'aggregate',
+        params: {
+          aggregate: this.getAggregateIndex(aggregateType)
+        }
+      };
+    },
     intendToGet(aggregateType) {
+      if (aggregateType === 'Press review') {
+        this.$router.push({ name: 'press-review' });
+      }
+
       if (aggregateType === 'bucket') {
+        this.$router.push({ name: 'bucket' });
         EventHub.$emit('status_list.intent_to_refresh_bucket', {
           aggregateType
         });
       }
 
+      EventHub.$emit('status_list.reload_intended', {
+        aggregateType
+      });
+    },
+    intendToGetAggregate(aggregateType) {
       EventHub.$emit('status_list.reload_intended', {
         aggregateType
       });

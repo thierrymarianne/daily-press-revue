@@ -17,9 +17,9 @@
           <div
             v-for="status in visibleStatuses.statuses"
             v-show="isAggregateVisible(aggregateType.name)"
-            :data-index="status.key"
+            :data-key="getStatusKey(status, aggregateType)"
             :data-status-id="status.statusId"
-            :key="status.statusId"
+            :key="getStatusKey(status, aggregateType)"
             class="status-list__item"
           >
             <status
@@ -62,16 +62,42 @@ export default {
     Status
   },
   mixins: [ApiMixin, StatusFormat],
+  data() {
+    return {
+      aggregateTypes: {},
+      state: SharedState.state,
+      visibleStatuses: SharedState.state.visibleStatuses,
+      errors: [],
+      errorMessages: SharedState.errors,
+      logger: SharedState.logger,
+      logLevel: SharedState.logLevel,
+      environment: SharedState.getEnvironmentParameters()
+    };
+  },
   computed: {
     visibleAggregateHasStatuses() {
-      return this.aggregateTypes[this.visibleStatuses.name].statuses.length > 0;
+      const aggregateIndex = this.getAggregateIndex(this.visibleStatuses.name);
+      return this.aggregateTypes[aggregateIndex].statuses.length > 0;
     }
+  },
+  mounted() {
+    EventHub.$on('status_list.reload_intended', this.getStatuses);
+    EventHub.$on('status_list.intent_to_refresh_bucket', this.refreshBucket);
+    EventHub.$on('status_list.after_fetch', this.refreshBucket);
+    EventHub.$on('status.added_to_bucket', this.addToBucket);
+    EventHub.$on('status.removed_from_bucket', this.removeFromBucket);
   },
   created() {
     this.aggregateTypes = this.declareAggregateTypesFromRoutes(this.routes);
     this.refreshBucket();
 
-    this.getStatuses({ aggregateType: 'pressReview' });
+    if (this.$route.name === 'aggregate') {
+      this.getStatuses({ aggregateType: this.$route.params.aggregate });
+    }
+
+    if (this.$route.name === 'press-review') {
+      this.getStatuses({ aggregateType: 'press-review' });
+    }
 
     const noHorizontalOverflow = css`
       overflow-x: hidden;
@@ -93,6 +119,10 @@ export default {
 
       return 'Hum... Nothing has been collected yet for this list. Something SHALL be wrong (See RFC 2119).';
     },
+    getStatusKey(status, aggregateType) {
+      const timestamp = new Date(status.publishedAt).getTime();
+      return `${aggregateType.name}:${status.statusId}:${timestamp}`;
+    },
     refreshBucket(event) {
       const statusesInBucket = this.getStatusesInBucket();
       let statusCollection = this.getCollectionOfStatusesInBucket(
@@ -113,6 +143,9 @@ export default {
       if (visitingBucket) {
         this.visibleStatuses.statuses = statusCollection;
       }
+    },
+    getAggregateIndex(aggregateType) {
+      return aggregateType.replace(/\s+/, '-').toLowerCase();
     },
     getCollectionOfStatusesInBucket(statuses) {
       if (statuses === undefined) {
@@ -148,19 +181,22 @@ export default {
     },
     switchBetweenVisibleStatuses(aggregateType, statuses, filter) {
       const visibleStatuses = statuses;
+      const aggregateIndex = this.getAggregateIndex(aggregateType);
+
       Object.keys(this.aggregateTypes).forEach(aggregateName => {
-        this.aggregateTypes[aggregateName].isVisible = false;
+        this.aggregateTypes[
+          this.getAggregateIndex(aggregateName)
+        ].isVisible = false;
       });
-      this.aggregateTypes[aggregateType].isVisible = true;
+      this.aggregateTypes[aggregateIndex].isVisible = true;
 
       let statusCollection = {};
       statusCollection = Object.assign(
         {},
-        this.aggregateTypes[aggregateType].statuses
+        this.aggregateTypes[aggregateIndex].statuses
       );
       visibleStatuses.statuses = this.filterStatuses(statusCollection, filter);
-      visibleStatuses.name = aggregateType;
-
+      visibleStatuses.name = aggregateIndex;
       return visibleStatuses;
     },
     getStatuses({ aggregateType, bustCache, filter }) {
@@ -173,11 +209,11 @@ export default {
         return;
       }
 
-      this.state.fetchedLatestStatusesOfAggregate = aggregateType;
+      const aggregateIndex = this.getAggregateIndex(aggregateType);
 
       if (
-        (!shouldBustCache && aggregateType === 'bucket') ||
-        this.aggregateTypes[aggregateType].statuses.length > 0
+        (!shouldBustCache && aggregateIndex === 'bucket') ||
+        this.aggregateTypes[aggregateIndex].statuses.length > 0
       ) {
         this.switchBetweenVisibleStatuses(
           aggregateType,
@@ -187,7 +223,9 @@ export default {
         return;
       }
 
-      const route = `${this.routes[aggregateType]}${this.getTimestampSuffix()}`;
+      const route = `${
+        this.routes[aggregateIndex].source
+      }${this.getTimestampSuffix()}`;
       const authenticationToken = localStorage.getItem('x-auth-token');
 
       this.replaceBucketFromPersistentLayer();
@@ -199,7 +237,7 @@ export default {
         .then(response => {
           this.statuses = null;
           try {
-            this.aggregateTypes[aggregateType].statuses = this.formatStatuses(
+            this.aggregateTypes[aggregateIndex].statuses = this.formatStatuses(
               response.data
             );
           } catch (error) {
@@ -225,7 +263,8 @@ export default {
       return timestampSuffix;
     },
     isAggregateVisible(aggregateType) {
-      return aggregateType === this.visibleStatuses.name;
+      const aggregateIndex = this.getAggregateIndex(aggregateType);
+      return aggregateIndex === this.visibleStatuses.name;
     },
     shouldGuardAgainstUndefinedRoute() {
       return typeof this.routes === 'undefined';
@@ -246,25 +285,6 @@ export default {
       }
       this.refreshBucket();
     }
-  },
-  mounted() {
-    EventHub.$on('status_list.reload_intended', this.getStatuses);
-    EventHub.$on('status_list.intent_to_refresh_bucket', this.refreshBucket);
-    EventHub.$on('status_list.after_fetch', this.refreshBucket);
-    EventHub.$on('status.added_to_bucket', this.addToBucket);
-    EventHub.$on('status.removed_from_bucket', this.removeFromBucket);
-  },
-  data() {
-    return {
-      aggregateTypes: {},
-      state: SharedState.state,
-      visibleStatuses: SharedState.state.visibleStatuses,
-      errors: [],
-      errorMessages: SharedState.errors,
-      logger: SharedState.logger,
-      logLevel: SharedState.logLevel,
-      environment: SharedState.getEnvironmentParameters()
-    };
   }
 };
 </script>
