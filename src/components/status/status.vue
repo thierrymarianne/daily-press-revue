@@ -51,13 +51,14 @@
       v-if="status.media && status.media.length > 0"
       class="status__row">
       <div class="status__media">
-        <div
+        <img
           v-for="(document, index) in status.media"
           :key="index"
-          :style="getDocumentProperties(document)"
+          :src="getMediaUrl(document)"
+          :style="getMediaProperties()"
           class="status__media-item"
           @click="openMediaItem(document)"
-        />
+        >
       </div>
     </div>
     <div class="status__row">
@@ -69,7 +70,7 @@
           v-for="(link, index) in status.links"
           :key="index"
           :href="link"
-          class="status__url"
+          class="status__url status__url--secondary-link"
         >{{ link }}</a>
       </div>
       <button
@@ -277,12 +278,15 @@ export default {
     getBackgroundProperties(document) {
       return `url(${document.url}) center / 50vw no-repeat`;
     },
-    getDocumentProperties(document) {
+    getMediaProperties() {
       return {
-        background: this.getBackgroundProperties(document),
-        height: `200px`,
-        width: '50vw'
+        height: '100%',
+        width: '100%',
+        objectFit: 'scale-down'
       };
+    },
+    getMediaUrl(media) {
+      return media.url;
     },
     intendToRemoveStatusFromBucket({ statusId }) {
       if (this.status.statusId !== statusId) {

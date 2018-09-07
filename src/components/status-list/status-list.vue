@@ -43,6 +43,7 @@
 
 <script>
 import { createNamespacedHelpers } from 'vuex';
+import { css } from 'emotion';
 
 import ApiMixin from '../../mixins/api';
 import StatusFormat from '../../mixins/status-format';
@@ -71,6 +72,11 @@ export default {
     this.refreshBucket();
 
     this.getStatuses({ aggregateType: 'pressReview' });
+
+    const noHorizontalOverflow = css`
+      overflow-x: hidden;
+    `;
+    document.body.classList.add(noHorizontalOverflow);
   },
   methods: {
     ...mapActions([

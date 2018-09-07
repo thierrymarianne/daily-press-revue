@@ -69,7 +69,7 @@
     @extend .clickable;
 
     display: flex;
-    margin-right: 8px;
+    margin-right: 0;
 
     &:active,
     &:hover,
@@ -80,6 +80,13 @@
 
     &:first-child {
       margin-left: 0;
+    }
+
+    &--secondary-link {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      max-width: 320px;
+      width: 320px;
     }
   }
 

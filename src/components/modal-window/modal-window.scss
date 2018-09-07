@@ -19,5 +19,11 @@
 
   &__image {
     z-index: 1;
+    width: 50%;
+
+    @media (max-width: 768px) {
+      object-fit: contain;
+      width: 100%;
+    }
   }
 }
