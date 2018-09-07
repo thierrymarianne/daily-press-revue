@@ -85,7 +85,7 @@ export default {
         return 'Your private bucket is empty.';
       }
 
-      return 'Hum... Nothing has been collected yet for this list. Something SHALL be wrong - See RFC 2119).';
+      return 'Hum... Nothing has been collected yet for this list. Something SHALL be wrong (See RFC 2119).';
     },
     refreshBucket(event) {
       const statusesInBucket = this.getStatusesInBucket();
