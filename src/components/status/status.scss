@@ -96,6 +96,10 @@
       overflow: hidden;
       max-width: 320px;
       width: 320px;
+
+      @media (max-width: 321px) {
+        display: none;
+      }
     }
   }
 

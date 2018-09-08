@@ -103,6 +103,14 @@ export default {
     `;
     document.body.classList.add(noHorizontalOverflow);
 
+    if (this.$route.name === 'status') {
+      const { statusId } = this.$route.params;
+      this.getStatuses({
+        aggregateType: this.$route.params.aggregateType,
+        filter: status => status.statusId === statusId
+      });
+    }
+
     if (this.$route.name === 'aggregate') {
       this.getStatuses({ aggregateType: this.$route.params.aggregateType });
     }
@@ -269,7 +277,8 @@ export default {
 
           this.switchBetweenVisibleStatuses(
             aggregateType,
-            this.visibleStatuses
+            this.visibleStatuses,
+            filter
           );
           EventHub.$emit('status_list.after_fetch');
         })

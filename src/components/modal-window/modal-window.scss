@@ -19,7 +19,8 @@
 
   &__image {
     z-index: 1;
-    width: 50%;
+    object-fit: scale-down;
+    width: 100%;
 
     @media (max-width: 768px) {
       object-fit: contain;
