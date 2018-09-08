@@ -146,13 +146,6 @@ export default {
     getButtonClass(aggregateType) {
       const classes = { 'action-menu__get-statuses': true };
 
-      if (
-        this.$route.name !== 'press-review' &&
-        this.$route.name !== 'bucket'
-      ) {
-        return classes;
-      }
-
       const aggregateIndex = this.getAggregateIndex(aggregateType);
 
       if (
@@ -168,14 +161,12 @@ export default {
       return aggregateType;
     },
     getPathTo(aggregateType) {
-      const path = {
+      return {
         name: 'aggregate',
         params: {
           aggregateType: this.getAggregateIndex(aggregateType)
         }
       };
-      console.log({ path });
-      return path;
     },
     hideActionMenu() {
       this.showMenu = false;
@@ -199,7 +190,7 @@ export default {
       });
     },
     intendToGetAggregate(aggregateType) {
-      // EventHub.$emit('action_menu.hide_intended');
+      EventHub.$emit('action_menu.hide_intended');
       EventHub.$emit('status_list.reload_intended', {
         aggregateType
       });

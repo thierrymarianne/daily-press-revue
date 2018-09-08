@@ -18,8 +18,13 @@ export default [
   },
   {
     component: StatusList,
-    path: '/aggregate/:aggregate',
+    path: '/aggregate/:aggregateType',
     name: 'aggregate'
+  },
+  {
+    component: StatusList,
+    path: '/aggregate/:aggregateType/:statusId',
+    name: 'status'
   },
   {
     path: '*',
