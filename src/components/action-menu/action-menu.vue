@@ -134,8 +134,25 @@ export default {
     getAggregateIndex(aggregateType) {
       return aggregateType.replace(/\s+/g, '-').toLowerCase();
     },
-    getButtonClass() {
-      return { 'action-menu__get-statuses': true };
+    getButtonClass(aggregateType) {
+      const classes = { 'action-menu__get-statuses': true };
+
+      if (
+        this.$route.name !== 'press-review' &&
+        this.$route.name !== 'bucket'
+      ) {
+        return classes;
+      }
+
+      const aggregateIndex = this.getAggregateIndex(aggregateType);
+      if (
+        this.visibleStatuses.name === aggregateType ||
+        this.visibleStatuses.name === aggregateIndex
+      ) {
+        classes['action-menu__get-statuses--active'] = true;
+      }
+
+      return classes;
     },
     getMenuLabel(aggregateType) {
       return aggregateType;
