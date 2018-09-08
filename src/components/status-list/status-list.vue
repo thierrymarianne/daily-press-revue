@@ -3,8 +3,8 @@
     <transition-group
       :class="getTransitionGroupClasses()"
       name="custom-classes-transition"
-      enter-active-class="animated slideInLeft"
-      leave-active-class="animated slideInLeft"
+      enter-active-class=""
+      leave-active-class=""
       tag="div"
     >
       <div
