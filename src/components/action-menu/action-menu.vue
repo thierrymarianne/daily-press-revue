@@ -1,6 +1,7 @@
 <template>
   <div class="action-menu">
     <div :class="getActionMenuContainerClasses">
+
       <button
         :class="getButtonClass('Press review')"
         @click="intendToGet('Press review')"
@@ -21,7 +22,9 @@
         :class="getButtonClass('bucket')"
         @click="intendToGet('bucket')"
       >Bucket</button>
+
       <div class="action-menu__action-wrapper">
+
         <button
           class="action-menu__button action-menu__refresh-button"
           @click="showStatusesHavingMedia"
@@ -31,6 +34,7 @@
             icon="images"
           />
         </button>
+
         <button
           :class="getActionMenuButtonClasses"
           @click="showStatusesInAggregateTop10O"
@@ -40,14 +44,17 @@
             class="action-menu__toggle-menu-icon"
           />
         </button>
+
       </div>
     </div>
+
     <font-awesome-icon
       :class="getActionMenuButtonClasses"
       :icon="getToggleMenuIcon"
       class="action-menu__toggle-menu-icon"
-      @click="showMenu = !showMenu"
+      @click="toggleMenuVisibility"
     />
+
   </div>
 </template>
 
@@ -125,10 +132,12 @@ export default {
       });
 
       return routeNames.sort().filter(route => {
-        const aggregateIndex = this.getAggregateIndex(route);
-        return aggregateIndex !== 'actions' && this.isVisible[aggregateIndex];
+        return this.isVisible[this.getAggregateIndex(route)];
       });
     }
+  },
+  mounted() {
+    EventHub.$on('action_menu.hide_intended', this.hideActionMenu);
   },
   methods: {
     getAggregateIndex(aggregateType) {
@@ -145,6 +154,7 @@ export default {
       }
 
       const aggregateIndex = this.getAggregateIndex(aggregateType);
+
       if (
         this.visibleStatuses.name === aggregateType ||
         this.visibleStatuses.name === aggregateIndex
@@ -158,14 +168,21 @@ export default {
       return aggregateType;
     },
     getPathTo(aggregateType) {
-      return {
+      const path = {
         name: 'aggregate',
         params: {
-          aggregate: this.getAggregateIndex(aggregateType)
+          aggregateType: this.getAggregateIndex(aggregateType)
         }
       };
+      console.log({ path });
+      return path;
+    },
+    hideActionMenu() {
+      this.showMenu = false;
     },
     intendToGet(aggregateType) {
+      EventHub.$emit('action_menu.hide_intended');
+
       if (aggregateType === 'Press review') {
         this.$router.push({ name: 'press-review' });
       }
@@ -182,6 +199,7 @@ export default {
       });
     },
     intendToGetAggregate(aggregateType) {
+      // EventHub.$emit('action_menu.hide_intended');
       EventHub.$emit('status_list.reload_intended', {
         aggregateType
       });
@@ -199,6 +217,9 @@ export default {
         bustCache: true,
         filter: 'top100'
       });
+    },
+    toggleMenuVisibility() {
+      this.showMenu = !this.showMenu;
     }
   }
 };
