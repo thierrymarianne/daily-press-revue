@@ -60,11 +60,11 @@
   }
 
   &__media {
-    background-color: lighten($color-greenish, 10%);
+    background-color: $color-black-light;
     display: flex;
     flex-direction: row;
     justify-content: center;
-    width: 100%;
+    width: calc(100% + 16px);
 
     &-item {
       cursor: pointer;
@@ -129,6 +129,7 @@
   &__text {
     display: flex;
     margin-top: $separation-2;
+    margin-bottom: 0;
     max-width: calc(100vw - 16px);
     white-space: pre-line;
 
