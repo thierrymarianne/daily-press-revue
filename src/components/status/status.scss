@@ -1,4 +1,5 @@
 .status {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   font-size: $font-size-base;
@@ -192,7 +193,7 @@
     }
 
     &--share-url {
-      margin-top: 8px;
+      margin-top: 0;
     }
 
     &--remove-from-bucket {

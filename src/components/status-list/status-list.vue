@@ -1,6 +1,57 @@
 <template>
   <div class="status-list">
+    <template v-if="showVirtualList">
+      <div
+        v-if="shouldShowEmptyAggregateMessage()"
+        :class="getTransitionGroupClasses()"
+      >
+        <div
+          :key='emptyListKey'
+          :class="listClasses(visitedAggregate)"
+          data-key
+        >
+          <p
+            class="status-list__item-none"
+          >{{ emptyAggregateText() }}</p>
+        </div>
+      </div>
+      <virtual-list
+        v-else-if="shouldShowVirtualList()"
+        key="virtual-list"
+        :size="virtualListHeight"
+        :remain="2"
+        variable
+        wclass="status-list__virtual-list"
+      >
+        <div
+          v-for="status in visibleStatuses.statuses"
+          v-show="isAggregateVisible(visibleStatuses.name)"
+          :data-key="getVirtualStatusKey(status, visitedAggregate)"
+          :key="getVirtualStatusKey(status, visitedAggregate)"
+          :class="getStatusListItemClass(status)"
+        >
+          <template v-if="canBeShared()">
+            <status
+              v-if="canStatusBeShared(status)"
+              :from-aggregate-type="visibleStatuses.name"
+              :status-at-first="status"
+              can-be-shared-at-first
+            />
+          </template>
+          <status
+            v-else-if="isStatusVisible(status)"
+            :from-aggregate-type="visibleStatuses.name"
+            :status-at-first="status" />
+          <conversation
+            v-else
+            :originates-from="status"
+            :statuses="status.conversation"
+          />
+        </div>
+      </virtual-list>
+    </template>
     <transition-group
+      v-if="!shouldShowVirtualList()"
       :class="getTransitionGroupClasses()"
       name="custom-classes-transition"
       enter-active-class=""
@@ -52,6 +103,7 @@
 <script>
 import { createNamespacedHelpers } from 'vuex';
 import { css } from 'emotion';
+import VirtualList from 'vue-virtual-scroll-list';
 
 import ApiMixin from '../../mixins/api';
 import StatusFormat from '../../mixins/status-format';
@@ -67,20 +119,31 @@ export default {
   name: 'status-list',
   components: {
     Conversation,
-    Status
+    Status,
+    VirtualList
   },
   mixins: [ApiMixin, StatusFormat],
   data() {
     return {
       aggregateTypes: {},
+      emptyListKey: 'empty-list',
       state: SharedState.state,
       visibleStatuses: SharedState.state.visibleStatuses,
       errors: [],
       errorMessages: SharedState.errors,
       logger: SharedState.logger,
       logLevel: SharedState.logLevel,
-      environment: SharedState.getEnvironmentParameters()
+      environment: SharedState.getEnvironmentParameters(),
+      showVirtualList: false,
+      visitedAggregate: 'press-review'
     };
+  },
+  computed: {
+    virtualListHeight() {
+      // We remove the height of the menu so that scrolling does not
+      // behave weirdly at the beginning
+      return window.innerHeight - 56;
+    }
   },
   mounted() {
     EventHub.$on('status_list.load_intended', this.showLoadingMessage);
@@ -89,6 +152,12 @@ export default {
     EventHub.$on('status_list.after_fetch', this.refreshBucket);
     EventHub.$on('status.added_to_bucket', this.addToBucket);
     EventHub.$on('status.removed_from_bucket', this.removeFromBucket);
+  },
+  beforeMount() {
+    this.visitedAggregate = this.getVisitedAggregate();
+  },
+  beforeUpdate() {
+    this.visitedAggregate = this.getVisitedAggregate();
   },
   beforeDestroy() {
     EventHub.$off('status_list.load_intended');
@@ -164,8 +233,37 @@ export default {
 
       return 'Your statuses of interest are being loaded.';
     },
+    shouldShowEmptyAggregateMessage() {
+      if (this.$route.name === 'status' || this.$route.name === 'bucket') {
+        return false;
+      }
+
+      return (
+        this.isAggregateVisible(this.visitedAggregate) &&
+        this.visibleStatuses.statuses.length === 0
+      );
+    },
+    shouldShowVirtualList() {
+      if (this.$route.name === 'status' || this.$route.name === 'bucket') {
+        return false;
+      }
+
+      return this.showVirtualList;
+    },
     getStatusKey(status, aggregateType) {
       return `${aggregateType.name}:${status.statusId}`;
+    },
+    getVirtualStatusKey(status) {
+      return `${this.visitedAggregate}:${status.statusId}`;
+    },
+    getVisitedAggregate() {
+      if (
+        this.$route.name === 'bucket' ||
+        this.$route.name === 'press-review'
+      ) {
+        return this.$route.name;
+      }
+      return this.$route.params.aggregateType;
     },
     isStatusListVisible() {
       const aggregateIndex = this.getAggregateIndex(this.visibleStatuses.name);
@@ -265,7 +363,7 @@ export default {
         this.visibleStatuses.statuses = [];
       }
 
-      let statusLimitPerList = 10;
+      let statusLimitPerList = 100;
       if (typeof maxStatusesPerList !== 'undefined') {
         statusLimitPerList = maxStatusesPerList;
       }
@@ -292,6 +390,7 @@ export default {
           filter,
           statusLimitPerList
         });
+
         return;
       }
 

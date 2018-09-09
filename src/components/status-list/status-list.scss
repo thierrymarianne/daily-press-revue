@@ -34,7 +34,8 @@
 
     &--full-width {
       display: flex;
-
+      width: calc(100% - 16px);
+      
       &[data-key] {
         &.status-list__empty-list {
           @extend .empty-list;
@@ -68,7 +69,7 @@
     transition: 1s;
 
     &--bucket {
-      max-width: calc(100% - 2px);
+      max-width: 100%;
     }
   }
 
@@ -88,6 +89,12 @@
 
     &--can-be-shared {
       height: calc(100vh - 56px - 17px);
+    }
+  }
+
+  &__virtual-list {
+    .status-list__list {
+      display: flex;
     }
   }
 }
