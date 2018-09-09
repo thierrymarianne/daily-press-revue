@@ -1,70 +1,13 @@
 <template>
   <div class="status-list">
-    <template v-if="showVirtualList">
-      <div
-        v-if="shouldShowEmptyAggregateMessage()"
-        :class="getTransitionGroupClasses()"
-      >
-        <div
-          :key='emptyListKey'
-          :class="listClasses(visitedAggregate)"
-          data-key
-        >
-          <p
-            class="status-list__item-none"
-          >{{ emptyAggregateText() }}</p>
-        </div>
-      </div>
-      <virtual-list
-        v-else-if="shouldShowVirtualList()"
-        key="virtual-list"
-        :size="virtualListHeight"
-        :remain="2"
-        variable
-        wclass="status-list__virtual-list"
-      >
-        <div
-          v-for="status in visibleStatuses.statuses"
-          v-show="isAggregateVisible(visibleStatuses.name)"
-          :data-key="getVirtualStatusKey(status, visitedAggregate)"
-          :key="getVirtualStatusKey(status, visitedAggregate)"
-          :class="getStatusListItemClass(status)"
-        >
-          <template v-if="canBeShared()">
-            <status
-              v-if="canStatusBeShared(status)"
-              :from-aggregate-type="visibleStatuses.name"
-              :status-at-first="status"
-              can-be-shared-at-first
-            />
-          </template>
-          <status
-            v-else-if="isStatusVisible(status)"
-            :from-aggregate-type="visibleStatuses.name"
-            :status-at-first="status" />
-          <conversation
-            v-else
-            :originates-from="status"
-            :statuses="status.conversation"
-          />
-        </div>
-      </virtual-list>
-    </template>
-    <transition-group
-      v-if="!shouldShowVirtualList()"
-      :class="getTransitionGroupClasses()"
-      name="custom-classes-transition"
-      enter-active-class=""
-      leave-active-class=""
-      tag="div"
-    >
+    <div :class="getTransitionGroupClasses()">
       <div
         v-for="aggregateType in aggregateTypes"
         :class="listClasses(aggregateType.name)"
         :key="aggregateType.name"
         :data-key="aggregateType.name"
       >
-        <template v-if="isStatusListVisible()">
+        <template v-if="isStatusListVisible(aggregateType)">
           <div
             v-for="status in visibleStatuses.statuses"
             v-show="isAggregateVisible(aggregateType.name)"
@@ -96,14 +39,14 @@
           class="status-list__item-none"
         >{{ emptyAggregateText() }}</p>
       </div>
-    </transition-group>
+    </div>
   </div>
 </template>
 
 <script>
 import { createNamespacedHelpers } from 'vuex';
 import { css } from 'emotion';
-import VirtualList from 'vue-virtual-scroll-list';
+import { throttle } from 'lodash-es';
 
 import ApiMixin from '../../mixins/api';
 import StatusFormat from '../../mixins/status-format';
@@ -119,8 +62,7 @@ export default {
   name: 'status-list',
   components: {
     Conversation,
-    Status,
-    VirtualList
+    Status
   },
   mixins: [ApiMixin, StatusFormat],
   data() {
@@ -131,10 +73,10 @@ export default {
       visibleStatuses: SharedState.state.visibleStatuses,
       errors: [],
       errorMessages: SharedState.errors,
+      lastScrollTop: 0,
       logger: SharedState.logger,
       logLevel: SharedState.logLevel,
       environment: SharedState.getEnvironmentParameters(),
-      showVirtualList: false,
       visitedAggregate: 'press-review'
     };
   },
@@ -150,8 +92,18 @@ export default {
     EventHub.$on('status_list.reload_intended', this.getStatuses);
     EventHub.$on('status_list.intent_to_refresh_bucket', this.refreshBucket);
     EventHub.$on('status_list.after_fetch', this.refreshBucket);
+    EventHub.$on(
+      'status_list.load_more_statuses_intended',
+      this.appendMoreStatus
+    );
+    EventHub.$on(
+      'status_list.apologize_about_empty_list_intended',
+      this.showEmptyStatusCollectionMessage
+    );
     EventHub.$on('status.added_to_bucket', this.addToBucket);
     EventHub.$on('status.removed_from_bucket', this.removeFromBucket);
+
+    window.addEventListener('scroll', throttle(this.handleScroll, 1000));
   },
   beforeMount() {
     this.visitedAggregate = this.getVisitedAggregate();
@@ -164,6 +116,7 @@ export default {
     EventHub.$off('status_list.reload_intended');
     EventHub.$off('status_list.intent_to_refresh_bucket');
     EventHub.$off('status_list.after_fetch');
+    EventHub.$off('status_list.load_more_statuses_intended');
     EventHub.$off('status.added_to_bucket');
     EventHub.$off('status.removed_from_bucket');
   },
@@ -209,6 +162,20 @@ export default {
       ActionTypes.RESTORE_BUCKET_FROM_PERSISTENCE_LAYER
     ]),
     ...mapGetters(['getStatusesInBucket', 'isInBucket']),
+    appendMoreStatus() {
+      const nextStatusIndex = this.nextStatusIndex();
+
+      const fullStatusCollection = Object.values(
+        this.visibleStatuses.originalCollection
+      );
+
+      if (nextStatusIndex > fullStatusCollection.length - 1) {
+        return;
+      }
+
+      const nextStatus = fullStatusCollection[nextStatusIndex];
+      this.visibleStatuses.statuses.push(nextStatus);
+    },
     canBeShared() {
       return this.$route.name === 'status';
     },
@@ -233,28 +200,37 @@ export default {
 
       return 'Your statuses of interest are being loaded.';
     },
-    shouldShowEmptyAggregateMessage() {
-      if (this.$route.name === 'status' || this.$route.name === 'bucket') {
-        return false;
+    handleScroll() {
+      const scrollTop =
+        document.documentElement.scrollTop || document.body.scrollTop;
+
+      if (scrollTop > 0 && this.lastScrollTop <= scrollTop) {
+        this.lastScrollTop = scrollTop;
+        EventHub.$emit('status_list.load_more_statuses_intended');
+
+        return;
       }
 
-      return (
-        this.isAggregateVisible(this.visitedAggregate) &&
-        this.visibleStatuses.statuses.length === 0
-      );
+      this.lastScrollTop = scrollTop;
     },
-    shouldShowVirtualList() {
-      if (this.$route.name === 'status' || this.$route.name === 'bucket') {
-        return false;
+    nextStatusIndex() {
+      const fullStatusCollection = Object.values(
+        this.visibleStatuses.originalCollection
+      );
+
+      if (this.visibleStatuses.statuses.length === 0) {
+        return 0;
       }
 
-      return this.showVirtualList;
+      const lastStatus = this.visibleStatuses.statuses[
+        this.visibleStatuses.statuses.length - 1
+      ];
+      const lastStatusIndex = fullStatusCollection.indexOf(lastStatus);
+
+      return lastStatusIndex + 1;
     },
     getStatusKey(status, aggregateType) {
       return `${aggregateType.name}:${status.statusId}`;
-    },
-    getVirtualStatusKey(status) {
-      return `${this.visitedAggregate}:${status.statusId}`;
     },
     getVisitedAggregate() {
       if (
@@ -265,11 +241,21 @@ export default {
       }
       return this.$route.params.aggregateType;
     },
-    isStatusListVisible() {
+    isStatusListVisible({ name }) {
+      if (
+        this.$route.name === 'bucket' ||
+        this.$route.name === 'press-review'
+      ) {
+        return name === this.$route.name;
+      }
+
+      const visitedAggregate = this.$route.params.aggregateType;
+
       const aggregateIndex = this.getAggregateIndex(this.visibleStatuses.name);
       return (
         this.aggregateTypes[aggregateIndex].statuses.length > 0 &&
-        !this.state.loadingStatuses
+        !this.state.loadingStatuses &&
+        name === visitedAggregate
       );
     },
     isStatusVisible(status) {
@@ -363,7 +349,7 @@ export default {
         this.visibleStatuses.statuses = [];
       }
 
-      let statusLimitPerList = 100;
+      let statusLimitPerList = this.state.maxStatusPerAggregateAtFirst;
       if (typeof maxStatusesPerList !== 'undefined') {
         statusLimitPerList = maxStatusesPerList;
       }
@@ -457,6 +443,11 @@ export default {
       }
       this.refreshBucket();
     },
+    showEmptyStatusCollectionMessage() {
+      this.visibleStatuses.statuses = Object.values(
+        this.visibleStatuses.originalCollection
+      );
+    },
     showLoadingMessage() {
       this.state.loadingStatuses = true;
       this.visibleStatuses.statuses = [];
@@ -473,6 +464,8 @@ export default {
       const visibleStatuses = statuses;
       const aggregateIndex = this.getAggregateIndex(aggregateType);
 
+      visibleStatuses.name = aggregateIndex;
+
       Object.keys(this.aggregateTypes).forEach(aggregateName => {
         this.aggregateTypes[
           this.getAggregateIndex(aggregateName)
@@ -485,15 +478,21 @@ export default {
         {},
         this.aggregateTypes[aggregateIndex].statuses
       );
-      visibleStatuses.statuses = this.filterStatuses(statusCollection, filter);
-      visibleStatuses.name = aggregateIndex;
-      this.hideLoadingMessage();
+
+      visibleStatuses.originalCollection = statusCollection;
+
+      let filteredStatuses = this.filterStatuses(statusCollection, filter);
 
       if (typeof statusLimitPerList !== 'undefined') {
-        visibleStatuses.statuses = Object.values(
-          visibleStatuses.statuses
-        ).slice(0, statusLimitPerList);
+        filteredStatuses = Object.values(filteredStatuses).slice(
+          0,
+          statusLimitPerList
+        );
       }
+
+      visibleStatuses.statuses = filteredStatuses;
+
+      this.hideLoadingMessage();
 
       return visibleStatuses;
     }

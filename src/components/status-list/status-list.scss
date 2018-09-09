@@ -36,6 +36,7 @@
       display: flex;
       position: relative;
       width: calc(100% - 16px);
+      min-width: calc(100% - 16px);
 
       &[data-key] {
         &.status-list__empty-list {
