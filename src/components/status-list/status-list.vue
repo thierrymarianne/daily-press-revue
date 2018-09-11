@@ -26,7 +26,9 @@
             <status
               v-else-if="isStatusVisible(status)"
               :from-aggregate-type="aggregateType.name"
-              :status-at-first="status" />
+              :status-at-first="status"
+              can-be-shared-at-first
+            />
             <conversation
               v-else
               :originates-from="status"
