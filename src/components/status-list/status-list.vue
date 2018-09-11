@@ -82,13 +82,6 @@ export default {
       visitedAggregate: 'press-review'
     };
   },
-  computed: {
-    virtualListHeight() {
-      // We remove the height of the menu so that scrolling does not
-      // behave weirdly at the beginning
-      return window.innerHeight - 56;
-    }
-  },
   mounted() {
     EventHub.$on('status_list.load_intended', this.showLoadingMessage);
     EventHub.$on('status_list.reload_intended', this.getStatuses);
@@ -130,12 +123,17 @@ export default {
     `;
     document.body.classList.add(noHorizontalOverflow);
 
-    if (this.$route.name === 'status') {
+    if (this.$route.name === 'aggregate-status') {
       const { statusId } = this.$route.params;
       this.getStatuses({
         aggregateType: this.$route.params.aggregateType,
         filter: status => status.statusId === statusId
       });
+    }
+
+    if (this.$route.name === 'status') {
+      this.getStatuses({ action: this.routes.actions.fetchStatus });
+      return;
     }
 
     if (this.$route.name === 'aggregate') {
@@ -179,7 +177,7 @@ export default {
       this.visibleStatuses.statuses.push(nextStatus);
     },
     canBeShared() {
-      return this.$route.name === 'status';
+      return this.$route.name === 'aggregate-status';
     },
     canStatusBeShared(status) {
       if (!this.canBeShared()) {
@@ -198,6 +196,10 @@ export default {
         this.visibleStatuses.statuses.length === 0
       ) {
         return 'This list of statuses is empty.';
+      }
+
+      if (this.$route.name === 'status') {
+        return 'Your status of interest is being loaded.';
       }
 
       return 'Your statuses of interest are being loaded.';
@@ -237,10 +239,12 @@ export default {
     getVisitedAggregate() {
       if (
         this.$route.name === 'bucket' ||
-        this.$route.name === 'press-review'
+        this.$route.name === 'press-review' ||
+        this.$route.name === 'status'
       ) {
         return this.$route.name;
       }
+
       return this.$route.params.aggregateType;
     },
     isStatusListVisible({ name }) {
@@ -248,7 +252,8 @@ export default {
 
       if (
         this.$route.name === 'bucket' ||
-        this.$route.name === 'press-review'
+        this.$route.name === 'press-review' ||
+        this.$route.name === 'status'
       ) {
         return (
           name === this.$route.name &&
@@ -341,15 +346,22 @@ export default {
 
       return {};
     },
-    getStatuses({ aggregateType, bustCache, filter, maxStatusesPerList }) {
+    getStatuses({
+      action,
+      aggregateType,
+      bustCache,
+      filter,
+      maxStatusesPerList
+    }) {
       this.visibleStatuses.statuses = [];
       if (this.$route.name === 'aggregate') {
         this.visibleStatuses.name = this.$route.params.aggregateType;
         this.visibleStatuses.statuses = [];
       }
       if (
+        this.$route.name === 'bucket' ||
         this.$route.name === 'press-review' ||
-        this.$route.name === 'bucket'
+        this.$route.name === 'status'
       ) {
         this.visibleStatuses.name = this.$route.name;
         this.visibleStatuses.statuses = [];
@@ -366,6 +378,33 @@ export default {
       }
 
       if (this.shouldGuardAgainstUndefinedRoute()) {
+        return;
+      }
+
+      const authenticationToken = localStorage.getItem('x-auth-token');
+      const requestOptions = {
+        headers: { 'x-auth-token': authenticationToken }
+      };
+
+      if (typeof action !== 'undefined') {
+        const { statusId } = this.$route.params;
+        const route = action.route.replace(':statusId', statusId);
+        const { method } = action;
+        requestOptions.params = { refresh: 1 };
+        this.$http[method](route, requestOptions)
+          .then(response => {
+            try {
+              const statuses = this.formatStatuses(response.data);
+              this.switchBetweenVisibleStatuses({ statuses });
+              return statuses;
+            } catch (error) {
+              return this.logger.error(error.message, 'status-list');
+            }
+          })
+          .catch(error => {
+            return this.logger.error(error.message, 'status-list');
+          });
+
         return;
       }
 
@@ -387,14 +426,11 @@ export default {
       }
 
       const route = `${this.routes[aggregateIndex].source}`;
-      const authenticationToken = localStorage.getItem('x-auth-token');
 
       this.replaceBucketFromPersistentLayer();
 
       this.$http
-        .get(route, {
-          headers: { 'x-auth-token': authenticationToken }
-        })
+        .get(route, requestOptions)
         .then(response => {
           this.statuses = null;
           try {
@@ -402,8 +438,7 @@ export default {
               response.data
             );
           } catch (error) {
-            this.logger.error(error.message, 'status-list');
-            return;
+            return this.logger.error(error.message, 'status-list');
           }
 
           this.switchBetweenVisibleStatuses({
@@ -412,9 +447,11 @@ export default {
             filter,
             statusLimitPerList
           });
-          EventHub.$emit('status_list.after_fetch');
+          return EventHub.$emit('status_list.after_fetch');
         })
-        .catch(e => this.logger.error(e.message, 'status-list', e));
+        .catch(e => {
+          return this.logger.error(e.message, 'status-list', e);
+        });
     },
     getTransitionGroupClasses() {
       const classes = { 'status-list__transition': true };
@@ -467,6 +504,20 @@ export default {
       filter,
       statusLimitPerList
     }) {
+      if (this.$route.name === 'status') {
+        this.visibleStatuses.name = 'status';
+        this.visibleStatuses.statuses = statuses;
+        this.visibleStatuses.originalCollection = statuses;
+        this.aggregateTypes.status.isVisible = true;
+        this.aggregateTypes.status.statuses = Object.values(
+          Object.assign({}, statuses)
+        );
+
+        this.hideLoadingMessage();
+
+        return statuses;
+      }
+
       const visibleStatuses = statuses;
       const aggregateIndex = this.getAggregateIndex(aggregateType);
 
