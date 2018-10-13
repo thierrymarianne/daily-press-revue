@@ -46,6 +46,13 @@ if (SharedState.isProductionModeActive()) {
 const router = new VueRouter(routingOptions);
 
 router.beforeEach((to, from, next) => {
+  if (
+    to.name === 'status' &&
+    from.name === 'status' &&
+    to.params.statusId === from.params.statusId) {
+    return;
+  }
+
   EventHub.$emit('status_list.load_intended');
   EventHub.$emit('action_menu.hide_intended');
 
@@ -55,6 +62,7 @@ router.beforeEach((to, from, next) => {
 
   if (peekQueryParamInSourceUrl && peekQueryParamNotInDestinationUrl) {
     const nextQuery = Object.assign(to.query, { peek: 1 });
+
     next({ name: to.name, params: to.params, query: nextQuery });
     return;
   }
