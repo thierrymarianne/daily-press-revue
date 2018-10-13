@@ -423,8 +423,6 @@ export default {
       filter,
       maxStatusesPerList
     }) {
-      let route;
-
       this.visibleStatuses.statuses = [];
       if (this.$route.name === 'aggregate') {
         this.visibleStatuses.name = this.$route.params.aggregateType;
@@ -496,7 +494,7 @@ export default {
         return;
       }
 
-      route = `${this.routes[aggregateIndex].source}`;
+      const route = `${this.routes[aggregateIndex].source}`;
 
       this.replaceBucketFromPersistentLayer();
 
@@ -608,26 +606,54 @@ export default {
 
       if (
         this.$route.name === 'bucket' &&
-        this.visibleStatuses.name === 'bucket' &&
-        this.visibleStatuses.statuses.length === 0 &&
-        this.visibleStatuses.originalCollection.length > 0
+        this.visibleStatuses.name === 'bucket'
       ) {
-        visibleStatuses = Object.values(
-          this.visibleStatuses.originalCollection
+        const bucketStatuses = this.getCollectionOfStatusesInBucket(
+          this.getStatusesInBucket()
         );
-        this.visibleStatuses.statuses = visibleStatuses.slice(
-          0,
-          visibleStatuses.length - 1
-        );
-        this.aggregateTypes.bucket.statuses = visibleStatuses.slice(
-          0,
-          visibleStatuses.length - 1
-        );
-        this.aggregateTypes.bucket.isVisible = true;
+        this.setBucketCollection(bucketStatuses, true);
+        this.visibleStatuses.originalCollection = bucketStatuses;
 
-        this.hideLoadingMessage();
+        if (
+          this.visibleStatuses.statuses.length === 0 &&
+          this.visibleStatuses.originalCollection.length > 0
+        ) {
+          this.setBucketCollection(
+            this.getCollectionOfStatusesInBucket(this.getStatusesInBucket()),
+            true
+          );
 
-        return visibleStatuses.slice(0, visibleStatuses.length - 1);
+          visibleStatuses = Object.values(
+            this.visibleStatuses.originalCollection
+          );
+
+          const areThereVisibleBucketItems =
+            visibleStatuses.length > 0 &&
+            this.aggregateTypes.bucket.statuses.length > 0;
+
+          // Prevent wrongly removing items from bucket
+          // when none is available to refill it right away
+          if (areThereVisibleBucketItems) {
+            this.visibleStatuses.statuses = visibleStatuses.slice(
+              0,
+              visibleStatuses.length
+            );
+            this.aggregateTypes.bucket.statuses = visibleStatuses.slice(
+              0,
+              visibleStatuses.length
+            );
+          }
+
+          this.aggregateTypes.bucket.isVisible = true;
+
+          this.hideLoadingMessage();
+
+          if (areThereVisibleBucketItems) {
+            return visibleStatuses.slice(0, visibleStatuses.length - 1);
+          }
+
+          return this.aggregateTypes.bucket.statuses;
+        }
       }
 
       visibleStatuses = statuses;

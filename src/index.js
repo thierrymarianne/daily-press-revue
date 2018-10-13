@@ -49,7 +49,8 @@ router.beforeEach((to, from, next) => {
   if (
     to.name === 'status' &&
     from.name === 'status' &&
-    to.params.statusId === from.params.statusId) {
+    to.params.statusId === from.params.statusId
+  ) {
     return;
   }
 
@@ -61,7 +62,11 @@ router.beforeEach((to, from, next) => {
     typeof to.query.peek === 'undefined';
 
   if (peekQueryParamInSourceUrl && peekQueryParamNotInDestinationUrl) {
-    const nextQuery = Object.assign(to.query, { peek: 1 });
+    let peek = '1';
+    if (from.query.peek === '1') {
+      peek = '';
+    }
+    const nextQuery = Object.assign(to.query, { peek: peek });
 
     next({ name: to.name, params: to.params, query: nextQuery });
     return;
