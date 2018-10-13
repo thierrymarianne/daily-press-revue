@@ -229,7 +229,12 @@ export default {
       }
 
       if (nextRoute.name === 'status') {
-        this.getStatuses({ action: this.routes.actions.fetchStatus });
+        const action = this.routes.actions.fetchStatus;
+        action.route = this.routes.actions.fetchStatus.route.replace(
+          ':statusId',
+          nextRoute.params.statusId
+        );
+        this.getStatuses({ action });
 
         return nextRoute;
       }
@@ -301,8 +306,11 @@ export default {
     isStatusListVisible({ name }) {
       const aggregateIndex = this.getAggregateIndex(name);
 
+      if (this.$route.name === 'bucket') {
+        return this.aggregateTypes.bucket.statuses.length;
+      }
+
       if (
-        this.$route.name === 'bucket' ||
         this.$route.name === 'press-review' ||
         this.$route.name === 'status'
       ) {
@@ -323,7 +331,7 @@ export default {
     isStatusVisible(status) {
       return !status.conversation || this.$route.name !== 'bucket';
     },
-    refreshBucket(event) {
+    refreshBucket(event = {}) {
       const statusesInBucket = this.getStatusesInBucket();
       let statusCollection = this.getCollectionOfStatusesInBucket(
         statusesInBucket
@@ -334,15 +342,26 @@ export default {
         statusCollection = this.expandConversations(statusCollection, event);
       }
 
-      this.aggregateTypes.bucket = {
-        statuses: statusCollection,
-        isVisible: false,
-        name: 'bucket'
-      };
+      this.setBucketCollection(
+        statusCollection,
+        typeof event.next === 'function'
+      );
 
       if (visitingBucket) {
+        this.aggregateTypes.bucket.statuses = statusCollection;
         this.visibleStatuses.statuses = statusCollection;
       }
+
+      if (typeof event.next === 'function') {
+        event.next();
+      }
+    },
+    setBucketCollection(statusCollection, visible = false) {
+      this.aggregateTypes.bucket = {
+        statuses: statusCollection,
+        isVisible: visible,
+        name: 'bucket'
+      };
     },
     getAggregateIndex(aggregateType) {
       return aggregateType.replace(/\s+/, '-').toLowerCase();
@@ -404,6 +423,8 @@ export default {
       filter,
       maxStatusesPerList
     }) {
+      let route;
+
       this.visibleStatuses.statuses = [];
       if (this.$route.name === 'aggregate') {
         this.visibleStatuses.name = this.$route.params.aggregateType;
@@ -439,11 +460,9 @@ export default {
       };
 
       if (typeof action !== 'undefined') {
-        const { statusId } = this.$route.params;
-        const route = action.route.replace(':statusId', statusId);
         const { method } = action;
         requestOptions.params = { refresh: 1 };
-        this.$http[method](route, requestOptions)
+        this.$http[method](action.route, requestOptions)
           .then(response => {
             try {
               const statuses = this.formatStatuses(response.data);
@@ -477,7 +496,7 @@ export default {
         return;
       }
 
-      const route = `${this.routes[aggregateIndex].source}`;
+      route = `${this.routes[aggregateIndex].source}`;
 
       this.replaceBucketFromPersistentLayer();
 
