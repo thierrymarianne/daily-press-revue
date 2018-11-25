@@ -41,6 +41,7 @@ if (SharedState.isProductionModeActive()) {
     .addPlugin(RavenVue, Vue)
     .install();
 }
+routingOptions.mode = 'history';
 
 const router = new VueRouter(routingOptions);
 
