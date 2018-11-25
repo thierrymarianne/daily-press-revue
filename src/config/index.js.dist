@@ -12,6 +12,12 @@ const getApi = () => ({
 
 const authentication = {
   apiKey: ''
+  auth0: {
+    host: '',
+    clientId: '',
+    redirectUrl: ''
+    logoutUrl: ''
+  }
 };
 localStorage.setItem('x-auth-token', authentication.apiKey);
 
