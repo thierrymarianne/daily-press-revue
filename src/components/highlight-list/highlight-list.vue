@@ -79,6 +79,11 @@ export default {
   components: { Status },
   mixins: [ApiMixin, StatusFormat],
   data() {
+    let defaultDate = this.$route.params.date;
+    if (this.$route.params.date === '1970-01-01') {
+      defaultDate = this.getMaxDate();
+    }
+
     return {
       includeRetweets: RETWEETS_EXCLUDED,
       items: [],
@@ -88,7 +93,7 @@ export default {
       pageIndex: 1,
       pageSize: 10,
       totalPages: null,
-      defaultDate: this.$route.params.date
+      defaultDate
     };
   },
   computed: {
@@ -179,6 +184,11 @@ export default {
           requestOptions.params.includeRetweets = 0;
         }
 
+        if (this.$route.name !== 'highlights') {
+          requestOptions.params.routeName = this.$route.name;
+          requestOptions.headers['x-auth-admin-token'] = this.idToken;
+        }
+
         const action = this.routes.actions.fetchHighlights;
         const route = `${Config.getSchemeAndHost()}${action.route}`;
         this.$http[action.method](route, requestOptions)
@@ -187,8 +197,12 @@ export default {
             this.totalPages = parseInt(response.headers['x-total-pages'], 10);
             this.pageIndex = parseInt(response.headers['x-page-index'], 10);
 
+            let routeName = 'highlights';
+            if (this.$route.name !== 'highlights') {
+              routeName = this.$route.name;
+            }
             this.$router.push({
-              name: 'highlights',
+              name: routeName,
               params: { date: this.defaultDate }
             });
 
