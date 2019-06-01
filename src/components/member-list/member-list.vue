@@ -53,41 +53,31 @@
         @click="fetchNextPage"
       >
     </div>
+    <div
+      class="member-list__selectors"
+    >
+      <toggler
+        id="less-than-ten"
+        :click-handler="getMembersHavingLessThanTenStatusesSelector()"
+        :do="() => requestBulkStatusCollection()"
+        :is-selected="areMembersHavingLessThanTenStatusesSelected"
+        :label-text="lessThanLabel"
+        icon-name="file-download"
+      />
+    </div>
     <ul class="list__items">
       <li
-        v-for="(member, index) in items"
+        v-for="(member, index) in sortedItems"
         :key="member.name"
         :data-key="member.name"
         class="list__item"
       >
-        <a
-          :href="getMemberProfileUrl(member.name)"
-          target="_blank"
-          class="member-list__button-navigate-to-twitter"
-        >
-          <font-awesome-icon
-            :icon="['fab', 'twitter']"
-          />
-        </a>
-        <span
-          @click="goToMember(member.name)"
-        >
-          @{{ format(member.name) }}
-        </span>
-        <span class="member-list__total-statuses">
-          ({{ formatTotalStatuses(member) }})
-        </span>
-        <font-awesome-icon
-          v-if="member.locked"
-          icon="lock"
-          class="member-list__button-unlock-aggregate"
-          @click="unlockAggregate(member, index)"
-        />
-        <font-awesome-icon
-          v-if="canCollectionBeRequested"
-          icon="file-download"
-          class="member-list__button-collect-status"
-          @click="requestStatusCollection(member.name)"
+        <member
+          :data-index="getOriginalIndexBySortedItemIndex(index)"
+          :is-selected="getMemberSelectionIsser(index)"
+          :member="member"
+          :select-member="getMemberSelector(index)"
+          :unlock="getMemberUnlockingCapability(index)"
         />
       </li>
     </ul>
@@ -98,10 +88,18 @@
 import { createNamespacedHelpers } from 'vuex';
 
 import ApiMixin from '../../mixins/api';
+import RequestMixin from '../../mixins/request';
 import StatusMixin from '../status/status-mixin';
-import SharedState from '../../modules/shared-state';
 import EventHub from '../../modules/event-hub';
 import Config from '../../config';
+import Member from '../member/member.vue';
+import MemberListActions from './store/actions';
+import SharedState from '../../modules/shared-state';
+import Toggler from '../toggler/toggler.vue';
+
+const { mapActions: mapMemberListActions } = createNamespacedHelpers(
+  'member-list'
+);
 
 const { mapGetters: mapAuthenticationGetters } = createNamespacedHelpers(
   'authentication'
@@ -109,7 +107,14 @@ const { mapGetters: mapAuthenticationGetters } = createNamespacedHelpers(
 
 export default {
   name: 'member-list',
-  mixins: [ApiMixin, StatusMixin],
+  components: { Member, Toggler },
+  mixins: [ApiMixin, RequestMixin, StatusMixin],
+  props: {
+    statusesThreshold: {
+      type: Number,
+      default: 300
+    }
+  },
   data() {
     return {
       items: [],
@@ -117,7 +122,11 @@ export default {
       keyword: null,
       pageIndex: 1,
       pageSize: 25,
-      totalPages: null
+      totalPages: null,
+      selection: {
+        lessThan10: false
+      },
+      sortedItems: []
     };
   },
   computed: {
@@ -125,8 +134,19 @@ export default {
       idToken: 'getIdToken',
       isAuthenticated: 'isAuthenticated'
     }),
-    canCollectionBeRequested() {
-      return !SharedState.getEnvironmentParameters().productionMode;
+    areMembersHavingLessThanTenStatusesSelected() {
+      return this.selection.lessThan10;
+    },
+    lessThanLabel() {
+      return `Select members with less than ${this.statusesThreshold} statuses`;
+    },
+    selectedMembers() {
+      return this.sortedItems.concat([]).filter(member => member.isSelected);
+    }
+  },
+  watch: {
+    items(newItems) {
+      this.sortedItems = this.sortItems(newItems);
     }
   },
   destroyed() {
@@ -141,30 +161,17 @@ export default {
     EventHub.$on('aggregate.reload_intended', this.fetchMembers);
 
     this.fetchMembers();
+    this.filterMembers();
   },
   methods: {
-    format(subject) {
-      const capitalizedSubject = `${subject
-        .substring(0, 1)
-        .toUpperCase()}${subject.substring(1, subject.length)}`;
-
-      return capitalizedSubject.replace('::', '>');
-    },
+    ...mapMemberListActions({
+      bulkCollectStatuses: MemberListActions.BULK_COLLECT_STATUS
+    }),
     previousPageExists() {
       return this.pageIndex > 1;
     },
     nextPageExists() {
       return this.totalPages && this.pageIndex < this.totalPages;
-    },
-    getBaseRequestOptions() {
-      return {
-        headers: {
-          'x-auth-admin-token': this.idToken
-        }
-      };
-    },
-    getMemberProfileUrl(memberName) {
-      return `http://twitter.com/${memberName}`;
     },
     fetchPreviousPage() {
       this.fetchMembers({ pageIndex: this.pageIndex - 1 });
@@ -205,22 +212,40 @@ export default {
       const route = `${Config.getSchemeAndHost()}${action.route}`;
       this.$http[action.method](route, requestOptions)
         .then(response => {
-          this.items = response.data;
+          this.items = JSON.parse(response.data).map((member, index) => {
+            const notSelectedMember = Object.assign({}, member);
+            notSelectedMember.isSelected = false;
+            notSelectedMember.index = index;
+            return notSelectedMember;
+          });
           this.totalPages = parseInt(response.headers['x-total-pages'], 10);
           this.pageIndex = parseInt(response.headers['x-page-index'], 10);
         })
         .catch(e => this.logger.error(e.message, 'member-list', e));
     },
-    goToMember(memberName) {
-      this.$router.push({
-        name: 'member',
-        params: {
-          memberName,
-          aggregateId: this.$route.params.aggregateId
-        }
-      });
+    filterMembers() {
+      const filteredMembers = this.sortedItems.concat([]);
 
-      EventHub.$emit('member_status.reload_intended');
+      if (this.selection.lessThan10) {
+        filteredMembers.forEach((member, index) => {
+          if (member.totalStatuses < this.statusesThreshold) {
+            this.selectMember(member.name, index);
+          }
+        });
+        return;
+      }
+
+      filteredMembers.forEach((member, index) => {
+        return this.unselectMember(member.name, index);
+      });
+    },
+    getMemberSelectionIsser(index) {
+      const members = this.items;
+
+      return () => {
+        const member = members[this.getOriginalIndexBySortedItemIndex(index)];
+        return this.isMemberSelected(member);
+      };
     },
     goToParent() {
       this.$router.push({
@@ -229,26 +254,58 @@ export default {
 
       EventHub.$emit('aggregate_list.reload_intended');
     },
-    requestStatusCollection(memberName) {
-      const requestOptions = this.getBaseRequestOptions();
-      const headerName = Object.keys(requestOptions.headers)[0];
-      this.$http.defaults.headers.common[headerName] =
-        requestOptions.headers[headerName];
-
-      requestOptions.params = {
-        aggregateId: this.$route.params.aggregateId,
-        memberName
+    getMemberUnlockingCapability(index) {
+      return () => {
+        this.items[index].locked = false;
       };
-
-      const action = this.routes.actions.requestStatusCollection;
-      const route = `${Config.getSchemeAndHost()}${action.route}`;
-      this.$http[action.method](route, requestOptions)
-        .then(response => {
-          this.logger.info(response);
-        })
-        .catch(e => this.logger.error(e.message, 'status-list', e));
     },
-    unlockAggregate(member, index) {
+    isMemberSelected(member) {
+      if (typeof member.isSelected === 'undefined') {
+        return false;
+      }
+
+      return member.isSelected;
+    },
+    getMemberSelector(index) {
+      return ($event, updateSelection) => {
+        const memberName = $event.itemId.replace('member-', '');
+
+        const member = this.items[
+          this.getOriginalIndexBySortedItemIndex(index)
+        ];
+        const shouldSelectMember = !this.isMemberSelected(member);
+        updateSelection(shouldSelectMember);
+
+        if (shouldSelectMember) {
+          this.selectMember(memberName, index);
+          return;
+        }
+
+        this.unselectMember(memberName, index);
+      };
+    },
+    getMembersHavingLessThanTenStatusesSelector() {
+      return ($event, updateSelection) => {
+        const areMembersSelected = this.selection.lessThan10;
+        const shouldSelectMembers = !areMembersSelected;
+        updateSelection(shouldSelectMembers);
+
+        this.selection.lessThan10 = shouldSelectMembers;
+
+        this.filterMembers();
+      };
+    },
+    getOriginalIndexBySortedItemIndex(index) {
+      const sortedItem = this.sortedItems[index];
+      let originalIndex = -1;
+      this.items.forEach((item, itemIndex) => {
+        if (item.name === sortedItem.name) {
+          originalIndex = itemIndex;
+        }
+      });
+      return originalIndex;
+    },
+    requestBulkStatusCollection() {
       const requestOptions = this.getBaseRequestOptions();
       const headerName = Object.keys(requestOptions.headers)[0];
       this.$http.defaults.headers.common[headerName] =
@@ -256,17 +313,47 @@ export default {
 
       requestOptions.params = {
         aggregateId: this.$route.params.aggregateId,
-        memberName: member.name
+        membersNames: this.selectedMembers.map(member => member.name)
       };
 
-      const action = this.routes.actions.unlockAggregate;
-      const route = `${Config.getSchemeAndHost()}${action.route}`;
-      this.$http[action.method](route, requestOptions)
-        .then(response => {
+      const action = this.routes.actions.bulkRequestStatusCollection;
+
+      this.bulkCollectStatuses({
+        $http: this.$http,
+        method: action.method,
+        route: `${Config.getSchemeAndHost()}${action.route}`,
+        requestOptions,
+        onSuccess: response => {
           this.logger.info(response);
-          this.items[index].locked = false;
-        })
-        .catch(e => this.logger.error(e.message, 'status-list', e));
+        },
+        onFailure: e => this.logger.error(e.message, 'status-list', e)
+      });
+    },
+    selectMember(memberName, index) {
+      this.items[
+        this.getOriginalIndexBySortedItemIndex(index)
+      ].isSelected = true;
+    },
+    sortItems(items) {
+      const sortedItems = items.concat([]);
+      sortedItems.sort((firstItem, secondItem) => {
+        if (secondItem.totalStatuses === firstItem.totalStatuses) {
+          return 0;
+        }
+
+        if (secondItem.totalStatuses > firstItem.totalStatuses) {
+          return -1;
+        }
+
+        return 1;
+      });
+
+      return sortedItems;
+    },
+    unselectMember(memberName, index) {
+      this.items[
+        this.getOriginalIndexBySortedItemIndex(index)
+      ].isSelected = false;
     }
   }
 };
