@@ -4,12 +4,12 @@
   @extend .list;
 
   .list__page-size {
-    border: 1px dotted $color-greener;
+    border: 1px dotted $color-black;
     padding: 5px 0;
 
     &-label {
       align-self: center;
-      color: $color-greener;
+      color: $color-black;
       display: inline-flex;
       line-height: 1em;
       width: 140px;
@@ -67,7 +67,7 @@
     [for="selecting-aggregates-without-statuses-but-members"],
     [for="selecting-aggregates-without-members"] {
       border-bottom: 2px solid $color-red;
-      color: $color-greener;
+      color: $color-black;
       cursor: pointer;
       display: flex;
       font-family: sans-serif;
@@ -113,7 +113,7 @@
       [name="collect-statuses-for-selected-aggregates"] {
         border: none;
         background-color: transparent;
-        color: $color-greener;
+        color: $color-black;
         padding: 8px;
       }
     }
@@ -127,7 +127,7 @@
     }
 
     [for="selecting-aggregates-having-members-and-statuses"] {
-      border-bottom: 2px solid $color-greener;
+      border-bottom: 2px solid $color-black;
     }
 
     [for="selecting-aggregates-without-statuses-but-members"] {
@@ -141,7 +141,7 @@
   &__button-sort-by-priority,
   &__button-switch-to-grid-view {
     align-self: center;
-    color: $color-greener;
+    color: $color-black;
     cursor: pointer;
     display: flex;
     font-size: 1.2em;
@@ -162,7 +162,7 @@
     padding: 0;
 
     .list__item {
-      border: 2px solid $color-greener;
+      border: 2px solid $color-black;
       border-right: 10px solid transparent;
       font-size: 1em;
       cursor: default;
@@ -178,7 +178,7 @@
         border-right: 10px solid transparent;
 
         &--is-selected {
-          border-right: 10px solid $color-even-greener;
+          border-right: 10px solid $color-black;
 
           .aggregate__buttons {
             .aggregate__button-edit-name,
@@ -211,7 +211,7 @@
 
         .aggregate--is-selected {
           background-color: transparent;
-          color: $color-even-greener;
+          color: $color-black;
 
           &.aggregate {
             border-right: 10px solid $color-orange;
@@ -221,29 +221,29 @@
             &__buttons {
               .aggregate__button-edit-name,
               .aggregate__button-validate-name-edition {
-                color: $color-greener;
+                color: $color-black;
 
                 &:hover {
-                  color: $color-even-greener;
+                  color: $color-black;
                 }
               }
             }
 
             &__button-list-members {
-              color: $color-greener;
+              color: $color-black;
 
               &:hover {
-                color: $color-even-greener;
+                color: $color-black;
               }
             }
 
             &__name {
-              color: $color-even-greener;
+              color: $color-black;
             }
 
             &__label-select-aggregate {
               &:hover {
-                color: $color-even-greener;
+                color: $color-black;
               }
             }
 
@@ -252,13 +252,13 @@
               &:link,
               &:visited {
                 .aggregate__list-twitter-icon {
-                  color: $color-greener;
+                  color: $color-black;
                 }
               }
 
               &:hover {
                 .aggregate__list-twitter-icon {
-                  color: $color-even-greener;
+                  color: $color-black;
                 }
               }
             }
@@ -274,7 +274,7 @@
 
         .aggregate--is-selected {
           background-color: transparent;
-          color: $color-even-greener;
+          color: $color-black;
 
           &.aggregate {
             border-right: 10px solid $color-red;
@@ -284,29 +284,29 @@
             &__buttons {
               .aggregate__button-edit-name,
               .aggregate__button-validate-name-edition {
-                color: $color-greener;
+                color: $color-black;
 
                 &:hover {
-                  color: $color-even-greener;
+                  color: $color-black;
                 }
               }
             }
 
             &__button-list-members {
-              color: $color-greener;
+              color: $color-black;
 
               &:hover {
-                color: $color-even-greener;
+                color: $color-black;
               }
             }
 
             &__name {
-              color: $color-even-greener;
+              color: $color-black;
             }
 
             &__label-select-aggregate {
               &:hover {
-                color: $color-even-greener;
+                color: $color-black;
               }
             }
 
@@ -315,13 +315,13 @@
               &:link,
               &:visited {
                 .aggregate__list-twitter-icon {
-                  color: $color-greener;
+                  color: $color-black;
                 }
               }
 
               &:hover {
                 .aggregate__list-twitter-icon {
-                  color: $color-even-greener;
+                  color: $color-black;
                 }
               }
             }

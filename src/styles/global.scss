@@ -11,8 +11,8 @@ body {
 }
 
 button {
-  border: 1px solid $color-greener;
-  color: $color-greener;
+  border: 1px solid $color-black;
+  color: $color-black;
   outline-color: transparent;
   font-family: $font-family;
 }
@@ -30,14 +30,14 @@ button {
 }
 
 #nprogress .bar {
-  background-color: $color-greener !important;
+  background-color: $color-black !important;
 }
 
 #nprogress .peg {
-  box-shadow: 0 0 10px $color-greener, 0 0 5px $color-greener !important;
+  box-shadow: 0 0 10px $color-black, 0 0 5px $color-black !important;
 }
 
 #nprogress .spinner-icon {
-  border-top-color: $color-greener !important;
-  border-left-color: $color-greener !important;
+  border-top-color: $color-black !important;
+  border-left-color: $color-black !important;
 }

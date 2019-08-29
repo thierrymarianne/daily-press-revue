@@ -36,9 +36,9 @@
   .list__button-search {
     align-self: center;
     background-color: transparent;
-    border: 1px solid $color-greener;
+    border: 1px solid $color-black;
     border-radius: 5px;
-    color: $color-greener;
+    color: $color-black;
     display: flex;
     margin-left: 10px;
     outline: transparent;
@@ -47,7 +47,7 @@
 
     &:hover {
       color: $color-beige;
-      background-color: $color-even-greener;
+      background-color: $color-black;
     }
   }
 
@@ -71,14 +71,14 @@
 
     .list__item {
       font-size: 1.3em;
-      border-bottom: 1px solid $color-greener;
+      border-bottom: 1px solid $color-black;
       cursor: pointer;
       display: flex;
       justify-content: center;
       margin-left: 0;
       height: 75px;
       line-height: 2em;
-      color: $color-greener;
+      color: $color-black;
       list-style-type: none;
       width: 100%;
     }

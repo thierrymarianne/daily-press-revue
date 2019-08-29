@@ -40,13 +40,13 @@
 
   .member__button-navigate-to-twitter {
     margin-right: 8px;
-    color: $color-greener;
+    color: $color-black;
 
     &:link,
     &:active,
     &:hover,
     &:visited {
-      color: $color-greener;
+      color: $color-black;
     }
   }
 }

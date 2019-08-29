@@ -3,7 +3,7 @@ $row-height: 75px;
 $margin-between-blocks: 8px;
 
 .aggregate {
-  color: $color-greener;
+  color: $color-black;
   display: flex;
   font-family: sans-serif;
   flex-direction: row;
@@ -14,7 +14,7 @@ $margin-between-blocks: 8px;
     background-color: transparent;
     border: none;
     border-bottom: 1px dotted transparent;
-    color: $color-greener;
+    color: $color-black;
     display: inline-flex;
     font-size: 1em;
     font-weight: 600;
@@ -53,13 +53,13 @@ $margin-between-blocks: 8px;
       &:link,
       &:visited {
         .aggregate__list-twitter-icon {
-          color: $color-greener;
+          color: $color-black;
         }
       }
 
       &:hover {
         .aggregate__list-twitter-icon {
-          color: $color-even-greener;
+          color: $color-black;
         }
       }
     }
@@ -93,7 +93,7 @@ $margin-between-blocks: 8px;
     padding-right: 0;
 
     &:hover {
-      color: $color-even-greener;
+      color: $color-black;
     }
   }
 
@@ -112,24 +112,24 @@ $margin-between-blocks: 8px;
 
     .aggregate__button-edit-name,
     .aggregate__button-validate-name-edition {
-      color: $color-greener;
+      color: $color-black;
       cursor: pointer;
       margin-left: $margin-between-blocks;
 
       &:hover {
-        color: $color-even-greener;
+        color: $color-black;
       }
     }
   }
 
   &__button-list-members {
-    color: $color-greener;
+    color: $color-black;
     cursor: pointer;
     margin-left: $margin-between-blocks;
     margin-right: $margin-between-blocks;
 
     &:hover {
-      color: $color-even-greener;
+      color: $color-black;
     }
 
     &--hidden {
@@ -149,19 +149,19 @@ $margin-between-blocks: 8px;
     .aggregate__buttons {
       .aggregate__button-edit-name,
       .aggregate__button-validate-name-edition {
-        color: $color-greener;
+        color: $color-black;
 
         &:hover {
-          color: $color-even-greener;
+          color: $color-black;
         }
       }
     }
 
     &__button-list-members {
-      color: $color-greener;
+      color: $color-black;
 
       &:hover {
-        color: $color-even-greener;
+        color: $color-black;
       }
     }
 
