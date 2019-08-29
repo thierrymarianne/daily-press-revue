@@ -54,7 +54,7 @@ $color-double-greener: darken($color-greener, 10%);
     }
 
     &--active {
-      border-color: $color-double-greener;
+      border-color: $color-black;
       border-left-color: transparent;
       border-right-color: transparent;
       border-top-color: transparent;
@@ -69,7 +69,7 @@ $color-double-greener: darken($color-greener, 10%);
   &__button {
     @extend .clickable;
 
-    border-top: 2px solid $color-greener; 
+    border-top: 2px solid $color-black;
     cursor: pointer;
     display: flex;
     justify-content: center;
@@ -102,18 +102,18 @@ $color-double-greener: darken($color-greener, 10%);
       width: 100%;
 
       &:last-child {
-        border-top: 1px solid $color-greener;
+        border-top: 1px solid $color-black;
       }
 
       .action-menu__button {
         background-color: transparent;
         border-color: transparent;
-        border-top: 1px solid $color-greener;
+        border-top: 1px solid $color-black;
         display: flex;
         width: 50%;
 
         &:first-child {
-          border-right: 1px solid $color-greener;
+          border-right: 1px solid $color-black;
         }
       }
 
@@ -151,7 +151,7 @@ $color-double-greener: darken($color-greener, 10%);
     padding: 0;
 
     &:hover {
-      color: $color-even-greener;
+      color: $color-black;
     }
   }
 

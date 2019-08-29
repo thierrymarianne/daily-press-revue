@@ -12,9 +12,9 @@
     width: 100%;
 
     .list__item {
-      border-top: 2px solid $color-greener;
-      border-left: 2px solid $color-greener;
-      border-bottom: 2px solid $color-greener;
+      border-top: 2px solid $color-black;
+      border-left: 2px solid $color-black;
+      border-bottom: 2px solid $color-black;
       flex-wrap: wrap;
       height: 100px;
       justify-content: left;
@@ -28,7 +28,7 @@
   }
 
   .member-list__selectors {
-    color: $color-even-greener;
+    color: $color-black;
 
     /deep/ .toggler {
       width: 100%;
