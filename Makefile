@@ -19,10 +19,11 @@ coverage: ## Run coverage of components with karma
 	./node_modules/.bin/karma start ./test/karma.ci.conf.js --single-run'
 
 development-server: ## Start development server
-	@/bin/bash -c 'export NODE_ENV="development" && npx webpack-dev-server --config ./webpack.config.js'
+	# @see https://webpack.js.org/configuration/dev-server/
+	@/bin/bash -c 'export NODE_ENV="development" && npx webpack-dev-server --open google-chrome --config ./webpack.config.js'
 
 install-javascript-dependencies: ## Install JavaScript dependencies as node nodules
-		@/bin/bash -ci 'npm install'
+	@/bin/bash -ci 'npm install'
 
 lint: ## Lint project files
 	@/bin/bash -c 'npx eslint src/ .js'
