@@ -53,6 +53,17 @@ const sassLoaderOptions = {
   includePaths: [path.join(__dirname, 'src/styles')]
 };
 
+const envVars = {
+  PRODUCTION: JSON.stringify(true),
+  RAVEN_DSN: JSON.stringify(process.env.RAVEN_DSN),
+  AUTHENTICATION_API_KEY: JSON.stringify(process.env.AUTHENTICATION_API_KEY),
+  AUTHENTICATION_AUDIENCE: JSON.stringify(process.env.AUTHENTICATION_AUDIENCE),
+  AUTHENTICATION_HOST: JSON.stringify(process.env.AUTHENTICATION_HOST),
+  AUTHENTICATION_CLIENT_ID: JSON.stringify(process.env.AUTHENTICATION_CLIENT_ID),
+  AUTHENTICATION_REDIRECT_URI: JSON.stringify(process.env.AUTHENTICATION_REDIRECT_URI),
+  AUTHENTICATION_LOGOUT_URI: JSON.stringify(process.env.AUTHENTICATION_LOGOUT_URI)
+};
+
 const plugins = [
   new FaviconsWebpackPlugin('./dist/daily-press-review.png'),
   new VueLoaderPlugin(),
@@ -61,7 +72,8 @@ const plugins = [
     inject: 'body'
   }),
   // @see https://github.com/webpack/webpack/issues/1151#issuecomment-162792966
-  new webpack.HotModuleReplacementPlugin()
+  new webpack.HotModuleReplacementPlugin(),
+  new webpack.DefinePlugin(envVars)
 ];
 
 if (productionMode) {

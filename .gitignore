@@ -1,3 +1,4 @@
+.env.local
 coverage/
 dist/*css
 dist/*js
