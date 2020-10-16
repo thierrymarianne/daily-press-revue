@@ -11,7 +11,7 @@ build: ## Build package
 	@/bin/bash -c 'export NODE_ENV="production" && rm -f dist/*css && rm -f dist/*js && npx webpack --config webpack.config.js --optimize-minimize --mode=production'
 
 clone-project: ## Clone the project from github
-		@/bin/bash -c 'git clone https://github.com/thierrymarianne/daily-press-revue.git'
+	@/bin/bash -c 'git clone https://github.com/thierrymarianne/daily-press-revue.git'
 
 coverage: ## Run coverage of components with karma
 	@/bin/bash -c 'export NODE_ENV="test" BABEL_ENV="test" && \
