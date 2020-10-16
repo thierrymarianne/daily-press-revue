@@ -303,11 +303,6 @@ export default {
               dateParams.endDate = this.startDate;
             }
 
-            this.$router.push({
-              name: routeName,
-              params: dateParams
-            });
-
             resolved(response.data);
           })
           .catch(e => {
