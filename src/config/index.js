@@ -1,13 +1,5 @@
-const ravenDsn = process.env.RAVEN_DSN;
-const authenticationApiKey = process.env.AUTHENTICATION_API_KEY;
-const authenticationAudience = process.env.AUTHENTICATION_AUDIENCE;
-const authenticationHost = process.env.AUTHENTICATION_HOST;
-const authenticationClientId = process.env.AUTHENTICATION_CLIENT_ID;
-const authenticationRedirectUri = process.env.AUTHENTICATION_REDIRECT_URI;
-const authenticationLogoutUri = process.env.AUTHENTICATION_LOGOUT_URI;
-
 const raven = {
-  dsn: ravenDsn
+  dsn: RAVEN_DSN
 };
 
 const testMode = false;
@@ -53,13 +45,13 @@ const getRoutes = () => api.routes;
 const getSchemeAndHost = () => `${api.scheme}${api.host}`;
 
 const authentication = {
-  apiKey: authenticationApiKey,
+  apiKey: AUTHENTICATION_API_KEY,
   auth0: {
-    audience: authenticationAudience,
-    host: authenticationHost,
-    clientId: authenticationClientId,
-    redirectUri: authenticationRedirectUri,
-    logoutUri: authenticationLogoutUri
+    audience: AUTHENTICATION_AUDIENCE,
+    host: AUTHENTICATION_HOST,
+    clientId: AUTHENTICATION_CLIENT_ID,
+    redirectUri: AUTHENTICATION_REDIRECT_URI,
+    logoutUri: AUTHENTICATION_LOGOUT_URI
   }
 };
 localStorage.setItem('x-auth-token', authentication.apiKey);

@@ -18,7 +18,14 @@
     "mocha": true
   },
   "globals": {
-    "expect": true
+    "expect": true,
+    "RAVEN_DSN": true,
+    "AUTHENTICATION_API_KEY": true,
+    "AUTHENTICATION_AUDIENCE": true,
+    "AUTHENTICATION_HOST": true,
+    "AUTHENTICATION_CLIENT_ID": true,
+    "AUTHENTICATION_REDIRECT_URI": true,
+    "AUTHENTICATION_LOGOUT_URI": true
   },
   "overrides": [
     {
@@ -37,7 +44,7 @@
         "prettier/prettier": "error"
       }
     },
-    {
+   {
       "files": ["src/**/*.vue"],
       "rules": {
         "prettier/prettier": "error",
