@@ -20,7 +20,7 @@ coverage: ## Run coverage of components with karma
 
 development-server: ## Start development server
 	# @see https://webpack.js.org/configuration/dev-server/
-	@/bin/bash -c 'export NODE_ENV="development" && npx webpack-dev-server --open google-chrome --config ./webpack.config.js'
+	@/bin/bash -c 'source .env.local && export NODE_ENV="development" && npx webpack-dev-server --open google-chrome --config ./webpack.config.js'
 
 install-javascript-dependencies: ## Install JavaScript dependencies as node nodules
 	@/bin/bash -ci 'npm install'
