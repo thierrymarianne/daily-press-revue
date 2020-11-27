@@ -214,7 +214,7 @@ export default {
 
       // @see https://github.com/iamcal/emoji-data
       emoji.img_sets.apple.path =
-        'https://revue-de-presse.weaving-the-web.org/emoji-data/img-apple-64/';
+        'https://api.press-review.weaving-the-web.org/emoji-data/img-apple-64/';
       return emoji.replace_unified(parsedSubject);
     }
   }
