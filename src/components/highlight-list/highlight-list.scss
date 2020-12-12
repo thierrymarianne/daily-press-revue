@@ -2,7 +2,6 @@
 
 .highlight-list {
   @extend .member-status-list;
-  width: 90vw;
 
   &__buttons {
     align-self: center;
@@ -12,6 +11,8 @@
     justify-content: space-between;
     justify-self: center;
     width: 100%;
+
+    @extend .responsive-content;
 
     [for="start-date"],
     [for="end-date"],

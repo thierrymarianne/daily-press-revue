@@ -59,9 +59,15 @@ const envVars = {
   AUTHENTICATION_API_KEY: JSON.stringify(process.env.AUTHENTICATION_API_KEY),
   AUTHENTICATION_AUDIENCE: JSON.stringify(process.env.AUTHENTICATION_AUDIENCE),
   AUTHENTICATION_HOST: JSON.stringify(process.env.AUTHENTICATION_HOST),
-  AUTHENTICATION_CLIENT_ID: JSON.stringify(process.env.AUTHENTICATION_CLIENT_ID),
-  AUTHENTICATION_REDIRECT_URI: JSON.stringify(process.env.AUTHENTICATION_REDIRECT_URI),
-  AUTHENTICATION_LOGOUT_URI: JSON.stringify(process.env.AUTHENTICATION_LOGOUT_URI)
+  AUTHENTICATION_CLIENT_ID: JSON.stringify(
+    process.env.AUTHENTICATION_CLIENT_ID
+  ),
+  AUTHENTICATION_REDIRECT_URI: JSON.stringify(
+    process.env.AUTHENTICATION_REDIRECT_URI
+  ),
+  AUTHENTICATION_LOGOUT_URI: JSON.stringify(
+    process.env.AUTHENTICATION_LOGOUT_URI
+  )
 };
 
 const plugins = [
@@ -176,6 +182,14 @@ const rules = [
     ]
   },
   {
+    test: /\.(png|jpe?g|gif)$/i,
+    use: [
+      {
+        loader: 'file-loader'
+      }
+    ]
+  },
+  {
     test: /\.js$/,
     exclude: /node_modules/,
     use: {
@@ -224,7 +238,10 @@ const webpackConfig = {
   devServer: {
     // @see https://webpack.js.org/configuration/dev-server/#devserver-historyapifallback
     historyApiFallback: {
-      rewrites: [{ from: /^\/.+$/, to: '/' }, { from: /\/logout/, to: '/' }]
+      rewrites: [
+        { from: /^\/.+$/, to: '/' },
+        { from: /\/logout/, to: '/' }
+      ]
     },
     contentBase: path.join(__dirname, 'dist'),
     compress: true,

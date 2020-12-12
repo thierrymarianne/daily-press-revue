@@ -68,6 +68,7 @@
 
   &__items {
     padding-left: 0;
+    @extend .responsive-content;
 
     .list__item {
       font-size: 1.3em;

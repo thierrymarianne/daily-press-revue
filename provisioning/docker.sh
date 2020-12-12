@@ -22,7 +22,7 @@ function run_nginx_container() {
     local logs=`pwd`/logs
 
     docker run -d --name nginx-daily-revue \
-    -p 127.0.0.1:80:80 \
+    -p 127.0.0.1:81:80 \
     -v ${docs}:/usr/share/nginx/html \
     -v ${logs}:/var/log/nginx \
     -v ${templates}:/etc/nginx/conf.d:ro \

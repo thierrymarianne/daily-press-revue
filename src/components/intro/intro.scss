@@ -1,0 +1,31 @@
+.intro {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  border-bottom: 1px $color-black solid;
+  padding-bottom: $separation-2;
+
+  &__logo {
+    display: flex;
+    width: 100px;
+
+    &-container {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  &__description {
+    margin-left: $separation-2;
+    line-height: 1.5rem;
+    font-style: normal;
+    font-size: 1.1em;
+    font-family: $font-family;
+    text-align: left;
+  }
+
+  &__project {
+    @extend .clickable;
+    font-size: 1em;
+  }
+}
