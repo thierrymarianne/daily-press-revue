@@ -12,10 +12,18 @@
     &-container {
       display: flex;
       align-items: center;
+      margin-top: $separation-2;
+      margin-bottom: $separation-2;
     }
   }
 
   &__description {
+
+    &-container {
+      display: flex;
+      align-items: center;
+    }
+
     margin-left: $separation-2;
     line-height: 1.5rem;
     font-style: normal;
