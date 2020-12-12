@@ -237,6 +237,7 @@ $status-margin: 1em;
     flex-direction: row;
     flex-wrap: wrap;
     padding: $separation-1;
+    padding-bottom: $separation-2;
     margin-top: calc(0 - #{$separation-1});
   }
 

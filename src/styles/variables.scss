@@ -30,6 +30,14 @@ $separation-2: calc(2 * #{$separation-1});
 
 $font-family: 'Montserrat', 'Open Sans', sans-serif;
 
+$width-small-device: 576px;
+$width-medium-device: 768px;
+$width-large-device: 992px;
+$width-extra-large-device: 1200px;
+
+// @see https://graphicdesign.stackexchange.com/q/30731/158844
+$content-width: 960px;
+
 .clickable {
   color: $color-hyperlink;
   cursor: pointer;
@@ -45,6 +53,16 @@ $font-family: 'Montserrat', 'Open Sans', sans-serif;
   &:active,
   &:hover {
     color: $color-hyperlink;
+  }
+}
+
+.responsive-content {
+  width: 90vw;
+  min-width: 90vw;
+
+  @media (min-width: $width-large-device) {
+    width: $content-width;
+    min-width: $content-width;
   }
 }
 

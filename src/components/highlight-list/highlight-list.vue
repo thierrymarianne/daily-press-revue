@@ -1,5 +1,6 @@
 <template>
   <div :class='highlightsClasses'>
+    <intro />
     <div class="highlight-list__buttons">
       <label
         :class="{ 'highlight-list__dates': showEndDate }"
@@ -103,6 +104,7 @@
         />
       </li>
     </ul>
+    <outro />
   </div>
 </template>
 
@@ -116,6 +118,8 @@ import EventHub from '../../modules/event-hub';
 import StatusFormat from '../../mixins/status-format';
 import SharedState from '../../modules/shared-state';
 import Status from '../status/status.vue';
+import Intro from '../intro/intro.vue';
+import Outro from '../outro/outro.vue';
 
 const { mapGetters: mapAuthenticationGetters } = createNamespacedHelpers(
   'authentication'
@@ -125,7 +129,7 @@ const RETWEETS_EXCLUDED = '0';
 
 export default {
   name: 'highlight-list',
-  components: { Status },
+  components: { Intro, Status, Outro },
   mixins: [ApiMixin, DateMixin, StatusFormat],
   data() {
     let { startDate, endDate } = this.$route.params;
