@@ -56,9 +56,8 @@
         color: $color-hyperlink;
         cursor: pointer;
         display: flex;
-        font-size: 1.5em;
+        font-size: 1em;
         justify-self: flex-end;
-        line-height: 1em;
         margin-left: 0.5em;
         text-decoration: underline;
 
@@ -129,7 +128,7 @@
   };
 
   &--anonymously-visited {
-    margin-top: 8px;
+    margin-top: 0;
   }
 
   .status {
