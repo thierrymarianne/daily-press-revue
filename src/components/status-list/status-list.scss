@@ -1,11 +1,11 @@
 .empty-list {
   align-self: center;
-  background-color: $color-beige-light;
+  background-color: $background-color;
   border: 1px solid $color-black;
   color: $color-black;
   display: flex;
   flex-direction: column;
-  font-family: roboto, sans-serif;
+  font-family: $font-family;
   margin: 50vh 0 0 0;
   padding: 0 10px 0 10px;
   position: fixed;
@@ -78,7 +78,7 @@
 
   &__item {
     align-items: center;
-    background-color: $color-beige-light;
+    background-color: $background-color;
     border-bottom: 1px solid $color-greenish;
     display: flex;
     justify-content: flex-start;

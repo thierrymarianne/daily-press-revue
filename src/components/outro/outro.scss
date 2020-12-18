@@ -5,7 +5,7 @@
   font-size: 1.1em;
   font-family: $font-family;
   margin: 0;
-  width: 100%;
+  @extend .responsive-content;
 
   a {
     @extend .clickable;

@@ -12,9 +12,9 @@
     width: 100%;
 
     .list__item {
-      border-top: 2px solid $color-black;
-      border-left: 2px solid $color-black;
-      border-bottom: 2px solid $color-black;
+      border-top: 2px solid $border-color;
+      border-left: 2px solid $border-color;
+      border-bottom: 2px solid $border-color;
       flex-wrap: wrap;
       height: 100px;
       justify-content: left;

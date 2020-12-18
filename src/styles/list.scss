@@ -68,11 +68,13 @@
 
   &__items {
     padding-left: 0;
+    margin-top: 0;
+
     @extend .responsive-content;
 
     .list__item {
       font-size: 1.3em;
-      border-bottom: 1px solid $color-black;
+      border-bottom: 1px solid $border-color;
       cursor: pointer;
       display: flex;
       justify-content: center;
