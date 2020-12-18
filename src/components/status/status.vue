@@ -68,22 +68,19 @@
     <div 
       v-else 
       class="status__row">
-      <div class="status__publication">
+      <div class="status__publisher">
         <a
+          :style="publisherStyle"
           :href="memberTimelineUrl"
           class="status__username"
           target="_blank"
-        >@{{ status.username }}</a>
+        >
+          <span class="status__publisher-name">@{{ status.username }}</span>
+        </a>
       </div>
     </div>
     <div class="status__row">
       <div class="status__content">
-        <div class="status__avatar-container">
-          <div
-            :style="'background: center / 48px no-repeat url(' + avatarUrl + ')'"
-            class="status__avatar"
-          ></div>
-        </div>
         <p
           class="status__text"
           v-html="statusText"
@@ -243,6 +240,7 @@
 
 <script>
 import { createNamespacedHelpers } from 'vuex';
+import locale from 'date-fns/locale/fr';
 
 import ApiMixin from '../../mixins/api';
 import StatusFormat from '../../mixins/status-format';
@@ -294,9 +292,6 @@ export default {
   },
   computed: {
     ...mapAuthenticationGetters(['isAuthenticated']),
-    avatarUrl() {
-      return this.status.avatarUrl;
-    },
     isAllowedToOpenConversation() {
       return (
         this.isBucketVisible &&
@@ -384,7 +379,8 @@ export default {
       }
 
       const publicationDate = new Date(this.status.publishedAt);
-      return this.$moment(publicationDate).format('LLLL');
+
+      return this.$date(publicationDate, 'PPPPpp', { locale });
     },
     memberTimelineUrl() {
       if (typeof this.status === 'undefined') {
@@ -392,6 +388,15 @@ export default {
       }
 
       return `https://twitter.com/${this.status.username}`;
+    },
+    publisherStyle() {
+      if (typeof this.status.avatarUrl === 'undefined') {
+        return '';
+      }
+      const size = '48px';
+      return `--avatar-url: center / ${size} no-repeat url("${this.status.avatarUrl}");
+      --avatar-size: ${size};
+      `;
     },
     retweetingMemberTimelineUrl() {
       if (typeof this.status === 'undefined' && this.status.retweet === false) {
@@ -532,7 +537,7 @@ export default {
     getMediaProperties() {
       return {
         'max-height': '80vw',
-        width: '100vmin',
+        width: '90vmin',
         objectFit: 'scale-down'
       };
     },

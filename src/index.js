@@ -3,7 +3,7 @@ import Vue from 'vue';
 
 import Notifications from 'vue-notification';
 import VueClipboards from 'vue-clipboards';
-import VueMoment from 'vue-moment';
+import VueDateFns from 'vue-date-fns';
 import VueShortkey from 'vue-shortkey';
 import Raven from 'raven-js';
 import RavenVue from 'raven-js/plugins/vue';
@@ -21,7 +21,7 @@ Vue.config.productionTip = false;
 
 Vue.use(VueRouter);
 Vue.use(Notifications);
-Vue.use(VueMoment);
+Vue.use(VueDateFns);
 Vue.use(VueShortkey);
 Vue.use(VueClipboards);
 

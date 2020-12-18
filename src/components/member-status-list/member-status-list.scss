@@ -4,6 +4,7 @@
   @extend .list;
   flex-direction: column;
   padding: 5px;
+  padding-top: 0;
   width: auto;
 
   .list__item {

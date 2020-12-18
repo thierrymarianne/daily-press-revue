@@ -8,6 +8,7 @@
       >
         <input
           id="start-date"
+          ref="startDate"
           v-model="startDate"
           :min="minDate"
           :max="maxStartDate"
@@ -31,6 +32,7 @@
       </label>
       <div
         v-if="canIdentifyRetweets"
+        v-show="canFilterByRetweet"
         class="highlight-list__retweets"
       >
         <span class="highlight-list__retweets-label">
@@ -164,6 +166,9 @@ export default {
     }),
     canIdentifyRetweets() {
       return new Date(this.startDate) >= new Date('2018-12-09');
+    },
+    canFilterByRetweet() {
+      return false;
     },
     highlights() {
       return this.items;
